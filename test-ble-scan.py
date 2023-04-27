@@ -1,23 +1,43 @@
 from bluepy.btle import Scanner, DefaultDelegate, UUID
 
-# The service UUID used by Aerobits IDME Pro
+# Define the Aerobits IDME Pro service UUID
 SERVICE_UUID = UUID("0000febb-0000-1000-8000-00805f9b34fb")
 
+# Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
+
     def handleDiscovery(self, dev, isNewDev, isNewData):
         if isNewDev:
             print("Discovered device:", dev.addr)
             print("  Device name:", dev.getValueText(9))
             print("  RSSI:", dev.rssi)
         elif isNewData:
-            print("Received new data from device:", dev.addr)
             for (adtype, desc, value) in dev.getScanData():
-                if adtype == 22:  # 16-bit service data
+                # Check if the advertising data is 16-bit service data broadcasted by Aerobits IDME Pro
+                if adtype == 22 and value.startswith(SERVICE_UUID.bin()):
+                    print("Received new data from device:", dev.addr)
+                    # Decode the service data
                     service_data = decode_service_data(value)
-                    if service_data:
-                        print("  Aerobits IDME Pro data:")
-                        for key, val in service_data.items():
-                            print(f"    {key}: {val}")
+                    # Print out the human-readable values
+                    print("  Aerobits IDME Pro data:")
+                    for key, val in service_data.items():
+                        print(f"    {key}: {val}")
+
+# Initialize the Bluetooth scanner and delegate
+scanner = Scanner().withDelegate(ScanDelegate())
+
+# Scan for Bluetooth devices and print out their advertising data
+devices = scanner.scan(10.0)
+for dev in devices:
+    print("Device address:", dev.addr)
+    print("  Device name:", dev.getValueText(9))
+    print("  RSSI:", dev.rssi)
+    print("  Advertising data:")
+    for (adtype, desc, value) in dev.getScanData():
+        print("    %s: %s" % (desc, value))
+
 
 def decode_service_data(data):
     """
