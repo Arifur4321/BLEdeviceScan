@@ -12,26 +12,10 @@ class ScanDelegate(DefaultDelegate):
             print("  RSSI:", dev.rssi)
         elif isNewData:
             print("Received new data from device:", dev.addr)
-            print("  Advertising data:")
-            for (adtype, desc, value) in dev.getScanData():
-                print("   %s: %s" % (desc, value))
-
-                if desc == 'Manufacturer': # Check if the advertisement data is from the manufacturer
-                    if value.startswith('AER'): # Check if the manufacturer is Aerobits
-                        # Decode the advertisement data based on the format provided by the manufacturer
-                        data = value[3:] # Remove the Aerobits prefix
-                        # Example decoding for demonstration purposes only
-                        battery_level = int(data[:2], 16)
-                        temperature = int(data[2:], 16) - 100
-                        print("Aerobits IDME Pro advertisement data:")
-                        print("  Battery level:", battery_level)
-                        print("  Temperature:", temperature)
- 
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
- 
 # Scan for Bluetooth devices and print out their advertising data
 devices = scanner.scan(10.0)
 for dev in devices:
@@ -41,16 +25,13 @@ for dev in devices:
     print("  Advertising data:")
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
-           
-
-        if desc == 'Manufacturer': # Check if the advertisement data is from the manufacturer
-                    if value.startswith('AER'): # Check if the manufacturer is Aerobits
-                        # Decode the advertisement data based on the format provided by the manufacturer
-                        data = value[3:] # Remove the Aerobits prefix
-                        # Example decoding for demonstration purposes only
-                        battery_level = int(data[:2], 16)
-                        temperature = int(data[2:], 16) - 100
-                        print("Aerobits IDME Pro advertisement data:")
-                        print("  Battery level:", battery_level)
-                        print("  Temperature:", temperature)
- 
+        if dev.getValueText(9) == "Aerobits IDME Pro" and desc == "Manufacturer":
+            data = bytearray.fromhex(value[4:])
+            altitude = int.from_bytes(data[0:2], byteorder='big', signed=True)
+            longitude = int.from_bytes(data[2:4], byteorder='big', signed=True)
+            latitude = int.from_bytes(data[4:6], byteorder='big', signed=True)
+            distance = int.from_bytes(data[6:8], byteorder='big', signed=False)
+            print(f"      Altitude: {altitude} meters")
+            print(f"      Longitude: {longitude/1000000} degrees")
+            print(f"      Latitude: {latitude/1000000} degrees")
+            print(f"      Distance: {distance} meters")
