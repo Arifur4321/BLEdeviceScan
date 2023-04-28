@@ -1,4 +1,4 @@
-from bluepy.btle import Scanner, DefaultDelegate
+import msgpack
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
@@ -13,6 +13,17 @@ class ScanDelegate(DefaultDelegate):
         elif isNewData:
             print("Received new data from device:", dev.addr)
 
+            # Decode MessagePack data
+            for (adtype, desc, value) in dev.getScanData():
+                if adtype == 255:  # Manufacturer Specific Data
+                    if value.startswith(b'\x1d\xa5\x94\x01'):  # Aerobits IDME Pro
+                        data = msgpack.unpackb(value[4:])
+                        print("Decoded data:", data)
+                        print("Altitude:", data['altitude'])
+                        print("Latitude:", data['latitude'])
+                        print("Longitude:", data['longitude'])
+                        print("Distance:", data['distance'])
+            
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
@@ -25,13 +36,3 @@ for dev in devices:
     print("  Advertising data:")
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
-        if dev.getValueText(9) == "Aerobits IDME Pro" and desc == "Manufacturer":
-            data = bytearray.fromhex(value[4:])
-            altitude = int.from_bytes(data[0:2], byteorder='big', signed=True)
-            longitude = int.from_bytes(data[2:4], byteorder='big', signed=True)
-            latitude = int.from_bytes(data[4:6], byteorder='big', signed=True)
-            distance = int.from_bytes(data[6:8], byteorder='big', signed=False)
-            print(f"      Altitude: {altitude} meters")
-            print(f"      Longitude: {longitude/1000000} degrees")
-            print(f"      Latitude: {latitude/1000000} degrees")
-            print(f"      Distance: {distance} meters")
