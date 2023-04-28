@@ -16,6 +16,18 @@ class ScanDelegate(DefaultDelegate):
             for (adtype, desc, value) in dev.getScanData():
                 print("   %s: %s" % (desc, value))
 
+                if desc == 'Manufacturer': # Check if the advertisement data is from the manufacturer
+                    if value.startswith('AER'): # Check if the manufacturer is Aerobits
+                        # Decode the advertisement data based on the format provided by the manufacturer
+                        data = value[3:] # Remove the Aerobits prefix
+                        # Example decoding for demonstration purposes only
+                        battery_level = int(data[:2], 16)
+                        temperature = int(data[2:], 16) - 100
+                        print("Aerobits IDME Pro advertisement data:")
+                        print("  Battery level:", battery_level)
+                        print("  Temperature:", temperature)
+ 
+
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
@@ -28,12 +40,17 @@ for dev in devices:
     print("  RSSI:", dev.rssi)
     print("  Advertising data:")
     for (adtype, desc, value) in dev.getScanData():
-        if desc == "16b Service Data":
-            # Decode the value for the specific service being advertised
-            if value.startswith("aafe1716"):  # Environmental Sensing service
-                temperature = int(value[10:14], 16) * 0.01
-                humidity = int(value[14:18], 16) * 0.01
-                print("    Temperature: %.2f °C" % temperature)
-                print("    Humidity: %.2f %%" % humidity)
-            else:
-                print("    Unknown service data:", value)
+        print("    %s: %s" % (desc, value))
+           
+
+        if desc == 'Manufacturer': # Check if the advertisement data is from the manufacturer
+                    if value.startswith('AER'): # Check if the manufacturer is Aerobits
+                        # Decode the advertisement data based on the format provided by the manufacturer
+                        data = value[3:] # Remove the Aerobits prefix
+                        # Example decoding for demonstration purposes only
+                        battery_level = int(data[:2], 16)
+                        temperature = int(data[2:], 16) - 100
+                        print("Aerobits IDME Pro advertisement data:")
+                        print("  Battery level:", battery_level)
+                        print("  Temperature:", temperature)
+ 
