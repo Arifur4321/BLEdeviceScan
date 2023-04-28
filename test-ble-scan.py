@@ -3,8 +3,6 @@ from bluepy.btle import Scanner, DefaultDelegate, UUID
 # Define the Aerobits IDME Pro service UUID
 SERVICE_UUID = UUID("0000febb-0000-1000-8000-00805f9b34fb")
 
-# Convert the UUID object to a byte string
-service_uuid_bytes = bytes.fromhex(str(SERVICE_UUID))
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
@@ -19,7 +17,7 @@ class ScanDelegate(DefaultDelegate):
         elif isNewData:
             for (adtype, desc, value) in dev.getScanData():
                 # Check if the advertising data is 16-bit service data broadcasted by Aerobits IDME Pro
-                if adtype == 22 and value.startswith(service_uuid_bytes):
+                if adtype == 22 and value.startswith(SERVICE_UUID.bin()):
                     print("Received new data from device:", dev.addr)
                     # Decode the service data
                     service_data = decode_service_data(value)
@@ -32,7 +30,7 @@ class ScanDelegate(DefaultDelegate):
 scanner = Scanner().withDelegate(ScanDelegate())
 
 # Scan for Bluetooth devices and print out their advertising data
-devices = scanner.scan(100.0)
+devices = scanner.scan(10.0)
 for dev in devices:
     print("Device address:", dev.addr)
     print("  Device name:", dev.getValueText(9))
@@ -52,7 +50,7 @@ def decode_service_data(data):
     decoded = {}
 
     # Check that the data starts with the service UUID
-    if data.startswith(service_uuid_bytes):
+    if data.startswith(SERVICE_UUID.bin()):
         # Parse the values from the data
         version = data[2]
         flags = data[3]
