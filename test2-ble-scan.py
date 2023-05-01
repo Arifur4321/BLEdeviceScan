@@ -1,5 +1,6 @@
 import msgpack
 from bluepy.btle import Scanner, DefaultDelegate, UUID
+import binascii
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
@@ -12,6 +13,21 @@ class ScanDelegate(DefaultDelegate):
             print("  RSSI:", dev.rssi)
         elif isNewData:
             print("Received new data from device:", dev.addr)
+
+            service_data = None
+            for (adtype, desc, value) in dev.getScanData():
+                if adtype == 22 and desc.startswith('16b Service Data'):
+                    service_data = value
+                    break
+
+            if service_data is not None:
+                # Parse the Service Data
+                uuid = binascii.unhexlify(service_data[0:4])[::-1]  # reverse byte order
+                data = binascii.unhexlify(service_data[4:])
+
+                # Print the parsed data
+                print("Service UUID:", binascii.hexlify(uuid))
+                print("Data:", binascii.hexlify(data))
 
             # Decode MessagePack data
             for (adtype, desc, value) in dev.getScanData():
