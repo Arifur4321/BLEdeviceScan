@@ -12,31 +12,7 @@ class ScanDelegate(DefaultDelegate):
             print("  Device name:", dev.getValueText(9))
             print("  RSSI:", dev.rssi)
 
-            service_data = dev.getValueText(22)
-
-            if service_data is not None and service_data.startswith('16b'):
-                # Extract the raw bytes from the service data string
-                raw_data = binascii.unhexlify(service_data[6:])
-
-                # Parse the raw data using the format specified in the IDME Pro documentation
-                (app_id, seq_num, flags, temperature, pressure, humidity, altitude, latitude, longitude, battery) = struct.unpack('<HHBhhHHiih', raw_data)
-
-                # Convert the latitude and longitude values to degrees
-                latitude = latitude / 1000000.0
-                longitude = longitude / 1000000.0
-
-                # Print the decoded data
-                print("Device address:", dev.addr)
-                print("  App ID:", app_id)
-                print("  Sequence number:", seq_num)
-                print("  Flags:", flags)
-                print("  Temperature (°C):", temperature / 100.0)
-                print("  Pressure (Pa):", pressure)
-                print("  Humidity (%):", humidity / 100.0)
-                print("  Altitude (m):", altitude)
-                print("  Latitude (°):", latitude)
-                print("  Longitude (°):", longitude)
-                print("  Battery (mV):", battery)
+             
 
         elif isNewData:
             print("Received new data from device:", dev.addr)
@@ -73,26 +49,7 @@ class ScanDelegate(DefaultDelegate):
                 # Extract the raw bytes from the service data string
                 raw_data = binascii.unhexlify(service_data[6:])
 
-                # Parse the raw data using the format specified in the IDME Pro documentation
-                (app_id, seq_num, flags, temperature, pressure, humidity, altitude, latitude, longitude, battery) = struct.unpack('<HHBhhHHiih', raw_data)
-
-                # Convert the latitude and longitude values to degrees
-                latitude = latitude / 1000000.0
-                longitude = longitude / 1000000.0
-
-                # Print the decoded data
-                print("Device address:", dev.addr)
-                print("  App ID:", app_id)
-                print("  Sequence number:", seq_num)
-                print("  Flags:", flags)
-                print("  Temperature (°C):", temperature / 100.0)
-                print("  Pressure (Pa):", pressure)
-                print("  Humidity (%):", humidity / 100.0)
-                print("  Altitude (m):", altitude)
-                print("  Latitude (°):", latitude)
-                print("  Longitude (°):", longitude)
-                print("  Battery (mV):", battery)
-
+             
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
@@ -106,54 +63,6 @@ for dev in devices:
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
 
-        service_data = None
-        for (adtype, desc, value) in dev.getScanData():
-            if adtype == 22 and desc.startswith('16b Service Data'):
-                service_data = value
-                break
+        if desc.startswith('16b'):
 
-            if service_data is not None:
-                # Parse the Service Data
-                uuid = binascii.unhexlify(service_data[0:4])[::-1]  # reverse byte order
-                data = binascii.unhexlify(service_data[4:])
-
-                # Print the parsed data
-                print("Service UUID:", binascii.hexlify(uuid))
-                print("Data:", binascii.hexlify(data))
- 
-
-
-        if adtype == 255:  # Manufacturer Specific Data
-            if value.startswith(b'\x1d\xa5\x94\x01'):  # Aerobits IDME Pro
-                data = msgpack.unpackb(value[4:])
-                print("Decoded data:", data)
-                print("Altitude:", data['altitude'])
-                print("Latitude:", data['latitude'])
-                print("Longitude:", data['longitude'])
-                print("Distance:", data['distance'])
-
-        service_data = dev.getValueText(22)
-            
-        if service_data is not None and service_data.startswith('16b'):
-                # Extract the raw bytes from the service data string
-                raw_data = binascii.unhexlify(service_data[6:])
-
-                # Parse the raw data using the format specified in the IDME Pro documentation
-                (app_id, seq_num, flags, temperature, pressure, humidity, altitude, latitude, longitude, battery) = struct.unpack('<HHBhhHHiih', raw_data)
-
-                # Convert the latitude and longitude values to degrees
-                latitude = latitude / 1000000.0
-                longitude = longitude / 1000000.0
-
-                # Print the decoded data
-                print("Device address:", dev.addr)
-                print("  App ID:", app_id)
-                print("  Sequence number:", seq_num)
-                print("  Flags:", flags)
-                print("  Temperature (°C):", temperature / 100.0)
-                print("  Pressure (Pa):", pressure)
-                print("  Humidity (%):", humidity / 100.0)
-                print("  Altitude (m):", altitude)
-                print("  Latitude (°):", latitude)
-                print("  Longitude (°):", longitude)
-                print("  Battery (mV):", battery)        
+            print ("  raw decode data > "  value)
