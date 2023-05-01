@@ -36,3 +36,11 @@ for dev in devices:
     print("  Advertising data:")
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
+        if adtype == 255:  # Manufacturer Specific Data
+            if value.startswith(b'\x1d\xa5\x94\x01'):  # Aerobits IDME Pro
+                data = msgpack.unpackb(value[4:])
+                print("Decoded data:", data)
+                print("Altitude:", data['altitude'])
+                print("Latitude:", data['latitude'])
+                print("Longitude:", data['longitude'])
+                print("Distance:", data['distance'])
