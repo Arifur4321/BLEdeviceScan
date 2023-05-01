@@ -82,7 +82,7 @@ for dev in devices:
 
         if desc.startswith('16b'):
 
-            print ("  raw decode data > "  value)
+            print ("  raw decode data > ",  value)
              
             # Parse Aerobits IDME Pro advertising data
     ad = dev.getScanData()
