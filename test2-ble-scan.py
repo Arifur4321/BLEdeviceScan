@@ -16,6 +16,21 @@ class ScanDelegate(DefaultDelegate):
 
         elif isNewData:
             print("Received new data from device:", dev.addr)
+            
+             # Parse Aerobits IDME Pro advertising data
+            ad = dev.getScanData()
+            for (adtype, desc, value) in ad:
+                if adtype == 22 and value.startswith(b'\xfa\xff\x0d\x1c'):
+                    altitude = int.from_bytes(value[7:9], byteorder='big', signed=True) * 0.1
+                    latitude = int.from_bytes(value[9:13], byteorder='big', signed=True) * 0.0001
+                    longitude = int.from_bytes(value[13:17], byteorder='big', signed=True) * 0.0001
+                    distance = int.from_bytes(value[17:19], byteorder='big', signed=True) * 0.1
+                    print("Decoded data:")
+                    print("  Altitude:", altitude)
+                    print("  Latitude:", latitude)
+                    print("  Longitude:", longitude)
+                    print("  Distance:", distance)
+
 
             service_data = None
             for (adtype, desc, value) in dev.getScanData():
