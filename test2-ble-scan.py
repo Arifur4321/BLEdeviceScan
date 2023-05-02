@@ -1,78 +1,29 @@
 from bluepy.btle import Scanner, DefaultDelegate
-import gpsd
 
-# Connect to the GPS module
-gpsd.connect()
-
-# Define a delegate class for BLE scanning
+# Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
 
     def handleDiscovery(self, dev, isNewDev, isNewData):
         if isNewDev:
-            print(f"Discovered device {dev.addr}")
-
+            print("Discovered device:", dev.addr)
+            print("  Device name:", dev.getValueText(9))
+            print("  RSSI:", dev.rssi)
+            print("  device uuid:", dev.uuid)
         elif isNewData:
-            print(f"Received new data from device {dev.addr}")
+            print("Received new data from device:", dev.addr)
 
-            # Get the advertisement data
-            adv_data = dev.getScanData()
-
-            # Get the UUID
-            uuid = dev.uuid
-
-            # Get the MAC address
-            mac_address = dev.addr
-
-            # Check if the device is an Aerobits IDME Pro device
-            value_text = dev.getValueText(9)
-            if value_text is not None and "IDME" in value_text:
-                # Connect to the device
-                print(f"Connecting to IDME Pro device {dev.addr}")
-                idme_device = dev.connect()
-
-                # Get the GPS data
-                try:
-                    gps_data = gpsd.get_current()
-                    if gps_data.mode >= 2:
-                        latitude = gps_data.lat
-                        longitude = gps_data.lon
-                        print(f"IDME Pro device {dev.addr} location: ({latitude}, {longitude})")
-                    else:
-                        print(f"IDME Pro device {dev.addr} location: Unknown")
-                except Exception as e:
-                    print(f"Error getting GPS data for IDME Pro device {dev.addr}: {e}")
-
-                # Disconnect from the device
-                idme_device.disconnect()
-
-            # Check if the device is a GPS device
-            elif "GPS" in value_text:
-                # Connect to the device
-                print(f"Connecting to GPS device {dev.addr}")
-                gps_device = dev.connect()
-
-                # Get the GPS data
-                try:
-                    gps_data = gpsd.get_current()
-                    if gps_data.mode >= 2:
-                        latitude = gps_data.lat
-                        longitude = gps_data.lon
-                        print(f"GPS device {dev.addr} location: ({latitude}, {longitude})")
-                    else:
-                        print(f"GPS device {dev.addr} location: Unknown")
-                except Exception as e:
-                    print(f"Error getting GPS data for GPS device {dev.addr}: {e}")
-
-                # Disconnect from the device
-                gps_device.disconnect()
-
-            # Print the device information
-            print(f"Device UUID: {uuid}")
-            print(f"Device MAC address: {mac_address}")
-            print(f"Advertisement data: {adv_data}")
-
-# Scan for BLE devices
+# Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
-devices = scanner.scan(2.0)
+
+# Scan for Bluetooth devices and print out their advertising data
+devices = scanner.scan(10.0)
+for dev in devices:
+    print("Device address:", dev.addr)
+    print("  Device name:", dev.getValueText(9))
+    print("  RSSI:", dev.rssi)
+    print("  Advertising data:")
+    for (adtype, desc, value) in dev.getScanData():
+        print("    %s: %s" % (desc, value))
+        print("  device uuid:", dev.uuid)
