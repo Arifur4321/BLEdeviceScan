@@ -10,20 +10,29 @@ class ScanDelegate(DefaultDelegate):
             print("Discovered device:", dev.addr)
             print("  Device name:", dev.getValueText(9))
             print("  RSSI:", dev.rssi)
-            print("  device uuid:", dev.uuid)
+         
         elif isNewData:
-            print("Received new data from device:", dev.addr)
+       
+            print(f"Received new data from device {dev.addr}")
+
+            # Get the advertisement data
+            adv_data = dev.getScanData()
+
+            # Print the device information
+            print(f"Device MAC address: {dev.addr}")
+            print(f"Advertisement data: {adv_data}")
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
 # Scan for Bluetooth devices and print out their advertising data
-devices = scanner.scan(10.0)
-for dev in devices:
-    print("Device address:", dev.addr)
-    print("  Device name:", dev.getValueText(9))
-    print("  RSSI:", dev.rssi)
-    print("  Advertising data:")
-    for (adtype, desc, value) in dev.getScanData():
-        print("    %s: %s" % (desc, value))
-        print("  device uuid:", dev.uuid)
+while True:
+    devices = scanner.scan(2.0)
+    for dev in devices:
+        print("Device address:", dev.addr)
+        print("  Device name:", dev.getValueText(9))
+        print("  RSSI:", dev.rssi)
+        print("  Advertising data:")
+        for (adtype, desc, value) in dev.getScanData():
+            print("    %s: %s" % (desc, value))
+           
