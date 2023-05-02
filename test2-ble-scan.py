@@ -17,9 +17,14 @@ class ScanDelegate(DefaultDelegate):
         print("  Advertising data:")
         for (adtype, desc, value) in dev.getScanData():
             print("    %s: %s" % (desc, value))
+            data = value[4:]
+            uuid = UUID(value[0:4], True)
+            print("data is :",  data)
+            print("uuid  is :",  uuid)
             if adtype == 22:  # 16-bit service data
                 uuid = UUID(value[0:4], True)
                 data = value[4:]
+                print("data is :",  data)
                 print("    Decoded 16-bit service data:")
                 if uuid == UUID("0000ffe0-0000-1000-8000-00805f9b34fb"):  # Aerobits IDME Pro service
                     if len(data) == 4:
