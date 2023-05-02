@@ -1,4 +1,5 @@
-from bluepy.btle import Scanner, DefaultDelegate, UUID
+from bluepy.btle import Scanner, DefaultDelegate
+from geopy.geocoders import Nominatim
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
@@ -10,56 +11,30 @@ class ScanDelegate(DefaultDelegate):
             print("Discovered device:", dev.addr)
             print("  Device name:", dev.getValueText(9))
             print("  RSSI:", dev.rssi)
-        elif isNewData:
-            print("Received new data from device:", dev.addr)
-
-        # Print out advertising data, including decoded 16-bit service data
-        print("  Advertising data:")
-        for (adtype, desc, value) in dev.getScanData():
-            print("    %s: %s" % (desc, value))
-            if adtype == 22:  # 16-bit service data
-                uuid = UUID(value[0:4], True)
-                data = value[4:]
-                print("    Decoded 16-bit service data:")
-                if uuid == UUID("0000ffe0-0000-1000-8000-00805f9b34fb"):  # Aerobits IDME Pro service
-                    if len(data) == 4:
-                        # Decode the data as follows:
-                        # Byte 0: Battery level (0-100%)
-                        # Byte 1: Temperature (in degrees Celsius)
-                        # Byte 2-3: Humidity (in %RH, little-endian)
-                        battery_level = data[0]
-                        temperature = data[1]
-                        humidity = int.from_bytes(data[2:4], byteorder="little")
-                        print("      Battery level:", battery_level, "%")
-                        print("      Temperature:", temperature, "°C")
-                        print("      Humidity:", humidity, "%RH")
+            # Get the location of the device using GPS
+            geolocator = Nominatim(user_agent="my_app")
+            location = geolocator.reverse(f"{dev.addr}")
+            print("  Latitude:", location.latitude)
+            print("  Longitude:", location.longitude)
+            print("  Altitude:", location.altitude)
+            print("  Height:", location.raw['address']['floor'])
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
-# Continuously scan for the Aerobits IDME Pro device and print out its advertising data when detected
-while True:
-    devices = scanner.scan(2.0)
-    for dev in devices:
-        if dev.addr == "AEROBITS_IDME_PRO_DEVICE_ADDRESS":
-            print("Device address:", dev.addr)
-            print("  Device name:", dev.getValueText(9))
-            print("  RSSI:", dev.rssi)
-            for (adtype, desc, value) in dev.getScanData():
-                print("  %s: %s" % (desc, value))
-            print("  Decoded 16-bit service data:")
-            for (adtype, desc, value) in dev.getScanData(22):
-                uuid = UUID(value[0:4], True)
-                data = value[4:]
-                if uuid == UUID("0000ffe0-0000-1000-8000-00805f9b34fb"):  # Aerobits IDME Pro service
-                    if len(data) == 4:
-                        # Decode the data as follows:
-                        # Byte 0: Battery level (0-100%)
-                        # Byte 1: Temperature (in degrees Celsius)
-                        # Byte 2-3: Humidity (in %RH, little-endian)
-                        battery_level = data[0]
-                        temperature = data[1]
-                        humidity = int.from_bytes(data[2:4], byteorder="little")
-                        print("    Battery level:", battery_level, "%")
-                        print("    Temperature:", temperature, "°C")
-                        print("    Humidity:", humidity, "%RH")
+# Scan for Bluetooth devices and print out their advertising data and location
+devices = scanner.scan(10.0)
+for dev in devices:
+    print("Device address:", dev.addr)
+    print("  Device name:", dev.getValueText(9))
+    print("  RSSI:", dev.rssi)
+    print("  Advertising data:")
+    for (adtype, desc, value) in dev.getScanData():
+        print("    %s: %s" % (desc, value))
+    # Get the location of the device using GPS
+    geolocator = Nominatim(user_agent="my_app")
+    location = geolocator.reverse(f"{dev.addr}")
+    print("  Latitude:", location.latitude)
+    print("  Longitude:", location.longitude)
+    print("  Altitude:", location.altitude)
+    print("  Height:", location.raw['address']['floor'])
