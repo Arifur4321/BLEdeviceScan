@@ -1,37 +1,43 @@
-import gps
-from bluetooth import discover_devices, BluetoothError
+from bluepy.btle import Scanner, DefaultDelegate
+from gpsd import gpsd
 
 # Connect to the GPS module
-session = gps.gps("localhost", "2947")
-session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
+gpsd.connect()
 
-# Define a function to get the GPS data
-def get_gps_data():
-    try:
-        report = session.next(timeout=1)
-        if report['class'] == 'TPV':
-            if hasattr(report, 'lat') and hasattr(report, 'lon'):
-                latitude = report.lat
-                longitude = report.lon
-                return (latitude, longitude)
-    except Exception as e:
-        print(e)
-    return None
+# Define a delegate class for BLE scanning
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
 
-# Discover nearby Bluetooth devices that support SPP
-devices = discover_devices(lookup_names=True, lookup_class=True)
-spp_devices = []
-for device, name, device_class in devices:
-    if device_class[0] == 0x01 and device_class[1] == 0x00 and device_class[2] == 0x00:
-        spp_devices.append((device, name))
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+        if isNewDev:
+            print(f"Discovered device {dev.addr}")
+        elif isNewData:
+            print(f"Received new data from device {dev.addr}")
+
+# Scan for BLE devices
+scanner = Scanner().withDelegate(ScanDelegate())
+devices = scanner.scan(10.0)
 
 # Loop through the devices and get their location
-for device, name in spp_devices:
-    # Get the latitude and longitude of the device
-    location = get_gps_data()
+for dev in devices:
+    # Check if the device is a GPS device
+    if "GPS" in dev.getValueText(9):
+        # Connect to the device
+        print(f"Connecting to GPS device {dev.addr}")
+        gps_device = dev.connect()
 
-    # Print the device name and location
-    if location is not None:
-        print(f"Device: {name}, Location: ({location[0]}, {location[1]})")
-    else:
-        print(f"Device: {name}, Location: Unknown")
+        # Get the GPS data
+        try:
+            gps_data = gpsd.get_current()
+            if gps_data.mode >= 2:
+                latitude = gps_data.lat
+                longitude = gps_data.lon
+                print(f"Device {dev.addr} location: ({latitude}, {longitude})")
+            else:
+                print(f"Device {dev.addr} location: Unknown")
+        except Exception as e:
+            print(f"Error getting GPS data for device {dev.addr}: {e}")
+
+        # Disconnect from the device
+        gps_device.disconnect()
