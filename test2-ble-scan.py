@@ -1,5 +1,5 @@
 from bluepy.btle import Scanner, DefaultDelegate
-from gpsd import gpsd
+import gpsd
 
 # Connect to the GPS module
 gpsd.connect()
@@ -22,7 +22,8 @@ devices = scanner.scan(10.0)
 # Loop through the devices and get their location
 for dev in devices:
     # Check if the device is a GPS device
-    if "GPS" in dev.getValueText(9):
+    value_text = dev.getValueText(9)
+    if value_text is not None and "GPS" in value_text:
         # Connect to the device
         print(f"Connecting to GPS device {dev.addr}")
         gps_device = dev.connect()
