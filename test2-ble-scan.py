@@ -21,12 +21,18 @@ class ScanDelegate(DefaultDelegate):
                 uuid = UUID(value[0:4], True)
                 data = value[4:]
                 print("    Decoded 16-bit service data:")
-                if uuid == UUID("1809"):  # Health Thermometer service
-                    temp = int.from_bytes(data, byteorder="little", signed=True) / 100
-                    print("      Temperature:", temp, "°C")
-                elif uuid == UUID("180D"):  # Heart Rate service
-                    bpm = int.from_bytes(data, byteorder="little")
-                    print("      Heart rate:", bpm, "bpm")
+                if uuid == UUID("0000ffe0-0000-1000-8000-00805f9b34fb"):  # Aerobits IDME Pro service
+                    if len(data) == 4:
+                        # Decode the data as follows:
+                        # Byte 0: Battery level (0-100%)
+                        # Byte 1: Temperature (in degrees Celsius)
+                        # Byte 2-3: Humidity (in %RH, little-endian)
+                        battery_level = data[0]
+                        temperature = data[1]
+                        humidity = int.from_bytes(data[2:4], byteorder="little")
+                        print("      Battery level:", battery_level, "%")
+                        print("      Temperature:", temperature, "°C")
+                        print("      Humidity:", humidity, "%RH")
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
