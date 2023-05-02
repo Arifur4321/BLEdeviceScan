@@ -51,3 +51,24 @@ for dev in devices:
     print("  Advertising data:")
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
+
+        service_data = None
+        for (adtype, desc, value) in dev.getScanData():
+            if adtype == 22 and desc.startswith('16b Service Data'):
+                service_data = value
+                break
+            if service_data is not None:
+                uuid = binascii.unhexlify(service_data[0:4])[::-1]  # reverse byte order
+                if uuid == bytes(AEROBITS_SERVICE_UUID):
+                    # Parse the Aerobits IDME Pro advertising data
+                    altitude = int.from_bytes(service_data[5:7], byteorder='big', signed=True) * 0.1
+                    latitude = int.from_bytes(service_data[7:11], byteorder='big', signed=True) * 0.0001
+                    longitude = int.from_bytes(service_data[11:15], byteorder='big', signed=True) * 0.0001
+                    distance = int.from_bytes(service_data[15:17], byteorder='big', signed=True) * 0.1
+                    print("Decoded data:")
+                    print("  Altitude:", altitude)
+                    print("  Latitude:", latitude)
+                    print("  Longitude:", longitude)
+                    print("  Distance:", distance)
+
+# Initialize the Bluetooth scanner and delegate
