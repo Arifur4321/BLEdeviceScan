@@ -16,6 +16,14 @@ class ScanDelegate(DefaultDelegate):
             print("  Estimated distance:", distance, "meters")
         elif isNewData:
             print("Received new data from device:", dev.addr)
+               # Estimate the distance based on the RSSI value
+            print("  RSSI:", dev.rssi)
+            distance = ScanDelegate().estimateDistance(dev.rssi)
+
+            print("  Estimated distance:", distance, "meters")
+
+            for (adtype, desc, value) in dev.getScanData():
+                print("    %s: %s" % (desc, value))
 
     def estimateDistance(self, rssi):
         # Calculate the distance based on the RSSI value using the log-distance path loss model
