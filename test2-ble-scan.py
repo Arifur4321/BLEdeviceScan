@@ -1,76 +1,51 @@
+import bluetooth
+from geopy.distance import geodesic
 from bluepy.btle import Scanner, DefaultDelegate
-from opendroneid import Decoder, messages
-import struct
-import time
 
-# Define a custom delegate class to handle Bluetooth device events
+# Define a custom delegate class for handling BLE scan results
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
-        self.drones = {}
 
     def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewData:
-            # Check if the device is broadcasting OpenDroneID data
-            for (adtype, desc, value) in dev.getScanData():
-                if desc == "Manufacturer" and value.startswith("0x4c00"):
-                    # Extract the OpenDroneID data from the advertisement data
-                    data = bytes.fromhex(value[6:])
-                    if len(data) >= 25 and data[0] == 0x01:
-                        # Parse the OpenDroneID message
-                        drone_id = struct.unpack("<H", data[1:3])[0]
-                        lat = struct.unpack("<i", data[3:7])[0] / 10**7
-                        lon = struct.unpack("<i", data[7:11])[0] / 10**7
-                        alt = struct.unpack("<h", data[11:13])[0] / 10
-                        accuracy_h = struct.unpack("<H", data[13:15])[0] / 10
-                        accuracy_v = struct.unpack("<H", data[15:17])[0] / 10
-                        speed = struct.unpack("<H", data[17:19])[0] / 10
-                        heading = struct.unpack("<H", data[19:21])[0] / 100
-                        timestamp = struct.unpack("<I", data[21:25])[0]
+        if isNewDev:
+            print("New Device: %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
+        elif isNewData:
+            print("New Data for Device: %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
 
-                        # Add the drone to the list of detected drones
-                        self.drones[drone_id] = (lat, lon, alt)
+# Scan for nearby Bluetooth devices using PyBluez
+devices = bluetooth.discover_devices()
 
-                        # Print the drone location and OpenDroneID data
-                        print(f"Drone {drone_id} location: ({lat}, {lon}, {alt})")
-                        print(f"OpenDroneID data: accuracy_h={accuracy_h}, accuracy_v={accuracy_v}, speed={speed}, heading={heading}, timestamp={timestamp}")
-
-# Initialize the Bluetooth scanner and delegate
+# Initialize the BLE scanner and set the delegate to our custom class
 scanner = Scanner().withDelegate(ScanDelegate())
 
-# Initialize the OpenDroneID decoder
-decoder = Decoder()
+# Scan for BLE devices and obtain their information
+ble_devices = scanner.scan(10.0)
 
-# Scan for Bluetooth devices and print out their OpenDroneID data
-while True:
-    devices = scanner.scan(2.0)
-    for dev in devices:
-        # Decode any OpenDroneID messages received from the device
-        for (adtype, desc, value) in dev.getScanData():
-            if desc == "Manufacturer" and value.startswith("0x4c00"):
-                data = bytes.fromhex(value[6:])
-                if len(data) >= 25 and data[0] == 0x01:
-                    message = decoder.decode(data)
-                    if isinstance(message, messages.BasicID):
-                        print(f"Received BasicID message from drone {message.ID}")
-                    elif isinstance(message, messages.Location):
-                        print(f"Received Location message from drone {message.ID}: ({message.Latitude}, {message.Longitude}, {message.Altitude})")
-                    elif isinstance(message, messages.Auth):
-                        print(f"Received Auth message from drone {message.ID}")
-                    elif isinstance(message, messages.SelfID):
-                        print(f"Received SelfID message from drone {message.ID}")
-                    elif isinstance(message, messages.System):
-                        print(f"Received System message from drone {message.ID}")
-                    elif isinstance(message, messages.OperatorID):
-                        print(f"Received OperatorID message from drone {message.ID}")
-                    elif isinstance(message, messages.MessagePack):
-                        print(f"Received MessagePack message from drone {message.ID}")
-                    else:
-                        print(f"Received unknown message type from drone {message.ID}")
+# Iterate through the discovered devices
+for device in ble_devices:
+    # Get the device's address and name
+    address, name = bluetooth.lookup_name(device.addr)
 
-        # Print the list of detected drones
-        if dev.addrType == "public":
-            print(f"Detected drones: {scan_delegate.drones}")
+    # Get the device's Bluetooth class
+    device_class = bluetooth.lookup_class(device.addr)
 
-    # Wait for a few seconds before scanning again
-    time.sleep(2)
+    # Calculate the distance between the device and your location
+    #  distance = geodesic((<your_latitude>, <your_longitude>, <your_altitude>), (device.addr, device.addrType, device.rssi)).meters
+
+    # Get the device's altitude
+    altitude = device.getScanData()[2][2]
+
+    # Get the device's latitude and longitude
+    manufacturer_data = device.getScanData()[3][2]
+    latitude = int(manufacturer_data[2:10], 16) / 1000000.0
+    longitude = int(manufacturer_data[10:18], 16) / 1000000.0
+
+    # Print the device's information
+    print("Device Name: %s" % name)
+    print("Device Address: %s" % address)
+    print("Device Class: %s" % device_class)
+    #  print("Distance: %.2f meters" % distance)
+    print("Altitude: %.2f meters" % altitude)
+    print("Latitude: %.6f" % latitude)
+    print("Longitude: %.6f" % longitude)
