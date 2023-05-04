@@ -28,11 +28,15 @@ class ScanDelegate(DefaultDelegate):
 scanner = Scanner().withDelegate(ScanDelegate())
 
 # Scan for Bluetooth devices and print out their device address, name, RSSI, and estimated distance
-devices = scanner.scan(10.0)
+devices = scanner.scan(100.0)
 for dev in devices:
     print("Device address:", dev.addr)
     print("  Device name:", dev.getValueText(9))
     print("  RSSI:", dev.rssi)
+    
     # Estimate the distance based on the RSSI value
     distance = ScanDelegate().estimateDistance(dev.rssi)
     print("  Estimated distance:", distance, "meters")
+
+    for (adtype, desc, value) in dev.getScanData():
+        print("    %s: %s" % (desc, value))
