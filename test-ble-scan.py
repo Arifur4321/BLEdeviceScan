@@ -1,7 +1,10 @@
 import requests
 import json
 from bluepy.btle import Scanner, DefaultDelegate
-
+import struct
+import struct
+import asyncio
+import bleak
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
