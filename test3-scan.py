@@ -1,6 +1,6 @@
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral, UUID
 import math
-
+import msgpack
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
@@ -27,7 +27,10 @@ class ScanDelegate(DefaultDelegate):
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 
-                
+                odid_data = msgpack.unpackb(bytes.fromhex(value[10:]), raw=False)
+                        # Print the decoded data
+                print("ODID MessagePack data received from device:", dev.addr)
+                print(odid_data)
 
     def estimateDistance(self, rssi):
         # Calculate the distance based on the RSSI value using the log-distance path loss model
@@ -54,4 +57,7 @@ for dev in devices:
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
          
-      
+        odid_data = msgpack.unpackb(bytes.fromhex(value[10:]), raw=False)
+                        # Print the decoded data
+        print("ODID MessagePack data received from device:", dev.addr)
+        print(odid_data)
