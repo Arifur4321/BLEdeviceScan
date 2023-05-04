@@ -23,8 +23,7 @@ class ScanDelegate(DefaultDelegate):
 
         # Extract latitude and longitude information from advertising packets
         for (adtype, desc, value) in dev.getScanData():
-            if desc == "Manufacturer":
-                if value.startswith("4c000215"):  # Check if the manufacturer data is for iBeacon
+            # Check if the manufacturer data is for iBeacon
                     uuid = value[8:40]
                     major = int(value[40:44], 16)
                     minor = int(value[44:48], 16)
@@ -59,15 +58,17 @@ for dev in devices:
     print("Device address:", dev.addr)
     print("  Device name:", dev.getValueText(9))
     print("  RSSI:", dev.rssi)
-
     # Estimate the distance based on the RSSI value
     distance = ScanDelegate().estimateDistance(dev.rssi)
     print("  Estimated distance:", distance, "meters")
 
+    print("  Advertising data:")
+    for (adtype, desc, value) in dev.getScanData():
+        print("    %s: %s" % (desc, value))
+ 
     # Extract latitude and longitude information from advertising packets
     for (adtype, desc, value) in dev.getScanData():
-        if desc == "Manufacturer":
-            if value.startswith("4c000215"):  # Check if the manufacturer data is for iBeacon
+           # Check if the manufacturer data is for iBeacon
                 uuid = value[8:40]
                 major = int(value[40:44], 16)
                 minor = int(value[44:48], 16)
