@@ -25,8 +25,14 @@ class ScanDelegate(DefaultDelegate):
         for (adtype, desc, value) in dev.getScanData():
             # Check if the manufacturer data is for iBeacon
                     uuid = value[8:40]
-                    major = int(value[40:44], 16)
-                    minor = int(value[44:48], 16)
+                    try :
+                        major = int(value[40:44], 16)
+                        minor = int(value[44:48], 16)
+
+                    except ValueError:
+                        # Handle the case where the substring is not a valid hexadecimal value
+                        major = 0  # Set a default value    
+
                     tx_power = int(value[48:50], 16) - 256
                     rssi = dev.rssi
                     distance = self.estimateDistance(rssi, tx_power)
@@ -70,8 +76,14 @@ for dev in devices:
     for (adtype, desc, value) in dev.getScanData():
            # Check if the manufacturer data is for iBeacon
                 uuid = value[8:40]
-                major = int(value[40:44], 16)
-                minor = int(value[44:48], 16)
+                try :
+                        major = int(value[40:44], 16)
+                        minor = int(value[44:48], 16)
+
+                except ValueError:
+                        # Handle the case where the substring is not a valid hexadecimal value
+                        major = 0  # Set a default value    
+                        
                 tx_power = int(value[48:50], 16) - 256
                 rssi = dev.rssi
                 distance = ScanDelegate().estimateDistance(rssi, tx_power)
