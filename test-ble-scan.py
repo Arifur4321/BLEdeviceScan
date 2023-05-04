@@ -1,8 +1,6 @@
-from bluepy.btle import Scanner, DefaultDelegate, UUID
-
-# Define the Aerobits IDME Pro service UUID
-SERVICE_UUID = UUID("0000febb-0000-1000-8000-00805f9b34fb")
-
+import requests
+import json
+from bluepy.btle import Scanner, DefaultDelegate
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
@@ -14,59 +12,51 @@ class ScanDelegate(DefaultDelegate):
             print("Discovered device:", dev.addr)
             print("  Device name:", dev.getValueText(9))
             print("  RSSI:", dev.rssi)
+            lat, lon = get_location(dev.addr)
+            print("  Latitude:", lat)
+            print("  Longitude:", lon)
         elif isNewData:
-            for (adtype, desc, value) in dev.getScanData():
-                # Check if the advertising data is 16-bit service data broadcasted by Aerobits IDME Pro
-                if adtype == 22 and value.startswith(SERVICE_UUID.bin()):
-                    print("Received new data from device:", dev.addr)
-                    # Decode the service data
-                    service_data = decode_service_data(value)
-                    # Print out the human-readable values
-                    print("  Aerobits IDME Pro data:")
-                    for key, val in service_data.items():
-                        print(f"    {key}: {val}")
+            print("Received new data from device:", dev.addr)
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
-# Scan for Bluetooth devices and print out their advertising data
+# Google Maps Geolocation API endpoint and API key
+url = "https://www.googleapis.com/geolocation/v1/geolocate?key=YOUR_API_KEY"
+
+# Function to get the latitude and longitude of a device using the Google Maps Geolocation API
+def get_location(mac_address):
+    # Scan for Wi-Fi access points and get their MAC addresses and signal strengths
+    wifi_access_points = []
+    wifi_scanner = Scanner()
+    wifi_devices = wifi_scanner.scan(5.0)
+    for wifi_device in wifi_devices:
+        for (adtype, desc, value) in wifi_device.getScanData():
+            if desc == "Complete Local Name" and value == mac_address:
+                wifi_access_points.append({
+                    "macAddress": wifi_device.addr.replace(":", ""),
+                    "signalStrength": wifi_device.rssi
+                })
+
+    # Send a POST request to the Google Maps Geolocation API with the Wi-Fi access points and cell towers
+    data = {
+        "wifiAccessPoints": wifi_access_points
+    }
+    response = requests.post(url, data=json.dumps(data))
+
+    # Parse the response and return the latitude and longitude
+    if response.status_code == 200:
+        location = response.json()["location"]
+        return location["lat"], location["lng"]
+    else:
+        return None, None
+
+# Scan for Bluetooth devices and print out their information
 devices = scanner.scan(10.0)
 for dev in devices:
     print("Device address:", dev.addr)
     print("  Device name:", dev.getValueText(9))
     print("  RSSI:", dev.rssi)
-    print("  Advertising data:")
-    for (adtype, desc, value) in dev.getScanData():
-        print("    %s: %s" % (desc, value))
-
-
-def decode_service_data(data):
-    """
-    Decode the 16-bit service data broadcast by Aerobits IDME Pro.
-
-    :param data: The service data as a byte string.
-    :return: A dictionary of decoded values.
-    """
-    decoded = {}
-
-    # Check that the data starts with the service UUID
-    if data.startswith(SERVICE_UUID.bin()):
-        # Parse the values from the data
-        version = data[2]
-        flags = data[3]
-        latitude = int.from_bytes(data[4:8], byteorder="little", signed=True) / 1e7
-        longitude = int.from_bytes(data[8:12], byteorder="little", signed=True) / 1e7
-        altitude = int.from_bytes(data[12:14], byteorder="little", signed=True)
-        accuracy = data[14]
-        num_satellites = data[15]
-
-        # Store the values in the dictionary
-        decoded["version"] = version
-        decoded["flags"] = flags
-        decoded["latitude"] = latitude
-        decoded["longitude"] = longitude
-        decoded["altitude"] = altitude
-        decoded["accuracy"] = accuracy
-        decoded["num_satellites"] = num_satellites
-
-    return decoded
+    lat, lon = get_location(dev.addr)
+    print("  Latitude:", lat)
+    print("  Longitude:", lon)
