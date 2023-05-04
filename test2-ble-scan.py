@@ -32,7 +32,7 @@ class ScanDelegate(DefaultDelegate):
                     except ValueError:
                         # Handle the case where the substring is not a valid hexadecimal value
                         major = 0  # Set a default value    
-
+                        minor = 0  
                     try:
                         tx_power = int(value[48:50], 16) - 256
                     except ValueError:
@@ -87,7 +87,7 @@ for dev in devices:
                 except ValueError:
                         # Handle the case where the substring is not a valid hexadecimal value
                         major = 0  # Set a default value    
-                        
+                        minor = 0 
                 try:
                    tx_power = int(value[48:50], 16) - 256
                 except ValueError:
