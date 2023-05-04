@@ -27,21 +27,7 @@ class ScanDelegate(DefaultDelegate):
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 
-                mac_address = dev.addr
-
-                    # Connect to the Aerobits IDME Pro device and get the UA ID Type and UAS ID
-                device = Peripheral(mac_address, addrType="public")
-                device.connect("public", "fast")
-                service_uuid = UUID("0000fff0-0000-1000-8000-00805f9b34fb")
-                ua_id_type_uuid = UUID("0000fff1-0000-1000-8000-00805f9b34fb")
-                uas_id_uuid = UUID("0000fff2-0000-1000-8000-00805f9b34fb")
-                service = device.getServiceByUUID(service_uuid)
-                ua_id_type_char = service.getCharacteristics(ua_id_type_uuid)[0]
-                uas_id_char = service.getCharacteristics(uas_id_uuid)[0]
-                ua_id_type = ua_id_type_char.read().decode('utf-8')
-                uas_id = uas_id_char.read().decode('utf-8')
-                print("UA ID Type:", ua_id_type)
-                print("UAS ID:", uas_id)
+                
 
     def estimateDistance(self, rssi):
         # Calculate the distance based on the RSSI value using the log-distance path loss model
@@ -68,18 +54,4 @@ for dev in devices:
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
          
-        mac_address = dev.addr
-
-            # Connect to the Aerobits IDME Pro device and get the UA ID Type and UAS ID
-        device = Peripheral(mac_address, addrType="public")
-        device.connect("public", "fast")
-        service_uuid = UUID("0000fff0-0000-1000-8000-00805f9b34fb")
-        ua_id_type_uuid = UUID("0000fff1-0000-1000-8000-00805f9b34fb")
-        uas_id_uuid = UUID("0000fff2-0000-1000-8000-00805f9b34fb")
-        service = device.getServiceByUUID(service_uuid)
-        ua_id_type_char = service.getCharacteristics(ua_id_type_uuid)[0]
-        uas_id_char = service.getCharacteristics(uas_id_uuid)[0]
-        ua_id_type = ua_id_type_char.read().decode('utf-8')
-        uas_id = uas_id_char.read().decode('utf-8')
-        print("UA ID Type:", ua_id_type)
-        print("UAS ID:", uas_id)
+      
