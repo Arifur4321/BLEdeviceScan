@@ -1,69 +1,79 @@
-import requests
-from bluepy.btle import Scanner, DefaultDelegate
+from bluepy.btle import Scanner, DefaultDelegate, ScanEntry
+import math
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
-    def __init__(self, wifi_data):
+    def __init__(self):
         DefaultDelegate.__init__(self)
-        self.wifi_data = wifi_data
 
-    def handleDiscovery(self, dev, isNewDev, isNewData):
+    def handleDiscovery(self, dev: ScanEntry, isNewDev, isNewData):
         if isNewDev:
             print("Discovered device:", dev.addr)
             print("  Device name:", dev.getValueText(9))
             print("  RSSI:", dev.rssi)
-            location = get_location(dev.addr, self.wifi_data)
-            if location:
-                print("  Location: %f, %f" % (location['lat'], location['lng']))
+            # Estimate the distance based on the RSSI value
+            distance = self.estimateDistance(dev.rssi)
+            print("  Estimated distance:", distance, "meters")
         elif isNewData:
             print("Received new data from device:", dev.addr)
+            # Estimate the distance based on the RSSI value
+            print("  RSSI:", dev.rssi)
+            distance = self.estimateDistance(dev.rssi)
+            print("  Estimated distance:", distance, "meters")
+
+        # Extract latitude and longitude information from advertising packets
+        for (adtype, desc, value) in dev.getScanData():
+            if desc == "Manufacturer":
+                if value.startswith("4c000215"):  # Check if the manufacturer data is for iBeacon
+                    uuid = value[8:40]
+                    major = int(value[40:44], 16)
+                    minor = int(value[44:48], 16)
+                    tx_power = int(value[48:50], 16) - 256
+                    rssi = dev.rssi
+                    distance = self.estimateDistance(rssi, tx_power)
+                    lat, lon = self.getLatLon(uuid, major, minor)
+                    print("  Latitude:", lat)
+                    print("  Longitude:", lon)
+
+    def estimateDistance(self, rssi, tx_power=-59):
+        # Calculate the distance based on the RSSI value using the log-distance path loss model
+        # The constants used in this formula are based on empirical measurements and can vary depending on the environment
+        n = 2.0  # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
+        return math.pow(10, (tx_power - rssi) / (10 * n))
+
+    def getLatLon(self, uuid, major, minor):
+        # Calculate the latitude and longitude based on the iBeacon UUID, major, and minor values
+        # The latitude and longitude values are encoded in the iBeacon UUID and can be decoded using the following formula
+        # lat = (UUID[9] * 256 + UUID[10]) / 90.0
+        # lon = (UUID[11] * 256 + UUID[12]) / 180.0
+        lat = (int(uuid[18:20], 16) * 256 + int(uuid[20:22], 16)) / 90.0
+        lon = (int(uuid[22:24], 16) * 256 + int(uuid[24:26], 16)) / 180.0
+        return lat, lon
 
 # Initialize the Bluetooth scanner and delegate
-scanner = Scanner().withDelegate(ScanDelegate([]))
+scanner = Scanner().withDelegate(ScanDelegate())
 
-# Define the Google Maps Geolocation API endpoint and API key
-endpoint = "https://www.googleapis.com/geolocation/v1/geolocate"
-api_key = "AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
-
-# Define a function to scan for nearby Wi-Fi access points and collect their MAC addresses and signal strengths
-def scan_wifi():
-    scanner = Scanner()
-    devices = scanner.scan(10.0)
-    wifi_data = []
-    for dev in devices:
-        for (adtype, desc, value) in dev.getScanData():
-            if desc == "Complete Local Name":
-                wifi_data.append({"macAddress": dev.addr, "signalStrength": dev.rssi})
-    return wifi_data
-
-# Define a function to get the location of a device using the Google Maps Geolocation API and nearby Wi-Fi access points
-def get_location(mac_address, wifi_data):
-    # If there are no nearby Wi-Fi access points, scan for them and update the global wifi_data variable
-    if not wifi_data:
-        wifi_data = scan_wifi()
-
-    # Look up the MAC address in the list of nearby Wi-Fi access points and send a request to the Google Maps Geolocation API to get the location
-    for wifi in wifi_data:
-        if wifi['macAddress'] == mac_address:
-            payload = {"wifiAccessPoints": [wifi]}
-            headers = {"Content-Type": "application/json", "Authorization": "key=" + api_key}
-            response = requests.post(endpoint, json=payload, headers=headers)
-            if response.status_code == 200:
-                location = response.json()['location']
-                return {"lat": location['lat'], "lng": location['lng']}
-
-# Scan for nearby Wi-Fi access points and store the results in the wifi_data variable
-wifi_data = scan_wifi()
-
-# Initialize the Bluetooth scanner and delegate with the wifi_data variable
-scanner = Scanner().withDelegate(ScanDelegate(wifi_data))
-
-# Scan for Bluetooth devices and print out their information and location data
+# Scan for Bluetooth devices and print out their device address, name, RSSI, estimated distance, latitude, and longitude
 devices = scanner.scan(10.0)
 for dev in devices:
     print("Device address:", dev.addr)
     print("  Device name:", dev.getValueText(9))
     print("  RSSI:", dev.rssi)
-    location = get_location(dev.addr, wifi_data)
-    if location:
-        print("  Location: %f, %f" % (location['lat'], location['lng'])))
+
+    # Estimate the distance based on the RSSI value
+    distance = ScanDelegate().estimateDistance(dev.rssi)
+    print("  Estimated distance:", distance, "meters")
+
+    # Extract latitude and longitude information from advertising packets
+    for (adtype, desc, value) in dev.getScanData():
+        if desc == "Manufacturer":
+            if value.startswith("4c000215"):  # Check if the manufacturer data is for iBeacon
+                uuid = value[8:40]
+                major = int(value[40:44], 16)
+                minor = int(value[44:48], 16)
+                tx_power = int(value[48:50], 16) - 256
+                rssi = dev.rssi
+                distance = ScanDelegate().estimateDistance(rssi, tx_power)
+                lat, lon = ScanDelegate().getLatLon(uuid, major, minor)
+                print("  Latitude:", lat)
+                print("  Longitude:", lon)
