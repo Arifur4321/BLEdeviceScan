@@ -30,7 +30,8 @@ class ScanDelegate(DefaultDelegate):
                 mac_address = dev.addr
 
                     # Connect to the Aerobits IDME Pro device and get the UA ID Type and UAS ID
-                device = Peripheral(mac_address)
+                device = Peripheral(mac_address, addrType="public")
+                device.connect("public", "fast")
                 service_uuid = UUID("0000fff0-0000-1000-8000-00805f9b34fb")
                 ua_id_type_uuid = UUID("0000fff1-0000-1000-8000-00805f9b34fb")
                 uas_id_uuid = UUID("0000fff2-0000-1000-8000-00805f9b34fb")
@@ -70,7 +71,8 @@ for dev in devices:
         mac_address = dev.addr
 
             # Connect to the Aerobits IDME Pro device and get the UA ID Type and UAS ID
-        device = Peripheral(mac_address)
+        device = Peripheral(mac_address, addrType="public")
+        device.connect("public", "fast")
         service_uuid = UUID("0000fff0-0000-1000-8000-00805f9b34fb")
         ua_id_type_uuid = UUID("0000fff1-0000-1000-8000-00805f9b34fb")
         uas_id_uuid = UUID("0000fff2-0000-1000-8000-00805f9b34fb")
