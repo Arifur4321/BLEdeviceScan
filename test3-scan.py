@@ -1,31 +1,67 @@
-from pymavlink import mavutil
-from geopy.geocoders import Nominatim
+from bluepy.btle import Scanner, DefaultDelegate
 
-# Define the MAVLink system ID and component ID
-system_id = 1
-component_id = 1
+# Define a custom delegate class to handle Bluetooth device events
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
 
-# Connect to the MAVLink network and wait for a heartbeat message from a nearby device
-print("Connecting to MAVLink network...")
-mavlink_conn = mavutil.mavlink_connection('udp:0.0.0.0:14550')
-mavlink_conn.wait_heartbeat()
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+        if isNewDev:
+            print("Discovered device:", dev.addr)
+            print("  Device name:", dev.getValueText(9))
+            print("  RSSI:", dev.rssi)
+        elif isNewData:
+            print("Received new data from device:", dev.addr)
+            # Parse the advertising data according to the ASD-STAN standard
+            data = dev.getValueText(255)
+            print(" ASD-STAN standard data",data)
+            if data is not None:
+                # Extract the data elements from the advertising data
+                elements = [data[i:i+2] for i in range(0, len(data), 2)]
+                i = 0
+                while i < len(elements):
+                    element_id = int(elements[i], 16)
+                    element_len = int(elements[i+1], 16)
+                    element_data = elements[i+2:i+2+element_len]
+                    i += 2 + element_len
+                    # Decode the data element based on its ID
+                    if element_id == 0x01:
+                        print("  Flags:", element_data)
+                    elif element_id == 0x02:
+                        print("  Incomplete List of 16-bit Service Class UUIDs:", element_data)
+                    elif element_id == 0x03:
+                        print("  Complete List of 16-bit Service Class UUIDs:", element_data)
+                    elif element_id == 0x04:
+                        print("  Incomplete List of 32-bit Service Class UUIDs:", element_data)
+                    elif element_id == 0x05:
+                        print("  Complete List of 32-bit Service Class UUIDs:", element_data)
+                    elif element_id == 0x06:
+                        print("  Incomplete List of 128-bit Service Class UUIDs:", element_data)
+                    elif element_id == 0x07:
+                        print("  Complete List of 128-bit Service Class UUIDs:", element_data)
+                    elif element_id == 0x08:
+                        print("  Shortened Local Name:", element_data)
+                    elif element_id == 0x09:
+                        print("  Complete Local Name:", element_data)
+                    elif element_id == 0x0a:
+                        print("  TX Power Level:", element_data)
+                    elif element_id == 0x0d:
+                        print("  Class of Device:", element_data)
+                    elif element_id == 0x16:
+                        print("  Service Data:", element_data)
+                    elif element_id == 0xff:
+                        print("  Manufacturer Specific Data:", element_data)
 
-# Scan for nearby devices and print out their location
-print("Scanning for nearby devices...")
-while True:
-    # Send a request to the MAVLink network to get the GPS location of nearby devices
-    mavlink_conn.mav.command_long_send(
-        system_id, component_id,
-        mavutil.mavlink.MAV_CMD_GET_GPS_LOCATION,
-        0, 0, 0, 0, 0, 0, 0, 0)
+# Initialize the Bluetooth scanner and delegate
+scanner = Scanner().withDelegate(ScanDelegate())
 
-    # Wait for a GPS message from a nearby device and print out its location
-    msg = mavlink_conn.recv_match(type='GPS_RAW_INT', blocking=True, timeout=10)
-    if msg:
-        lat = msg.lat / 1e7
-        lon = msg.lon / 1e7
-        alt = msg.alt / 1e3
-        print("Device location: %f, %f, %f" % (lat, lon, alt))
-        geolocator = Nominatim(user_agent="my_app")
-        location = geolocator.reverse("%f, %f" % (lat, lon))
-        print("Device address:", location.address)
+# Scan for Bluetooth devices and print out their advertising data
+devices = scanner.scan(10.0)
+for dev in devices:
+    print("Device address:", dev.addr)
+    print("  Device name:", dev.getValueText(9))
+    print("  RSSI:", dev.rssi)
+    print("  Advertising data:")
+    data = dev.getValueText(255)
+    if data is not None:
+        print("    Raw data:", data)
