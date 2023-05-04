@@ -33,7 +33,11 @@ class ScanDelegate(DefaultDelegate):
                         # Handle the case where the substring is not a valid hexadecimal value
                         major = 0  # Set a default value    
 
-                    tx_power = int(value[48:50], 16) - 256
+                    try:
+                        tx_power = int(value[48:50], 16) - 256
+                    except ValueError:
+                     # Handle the case where the substring is not a valid hexadecimal value
+                        tx_power = -59
                     rssi = dev.rssi
                     distance = self.estimateDistance(rssi, tx_power)
                     lat, lon = self.getLatLon(uuid, major, minor)
@@ -84,7 +88,11 @@ for dev in devices:
                         # Handle the case where the substring is not a valid hexadecimal value
                         major = 0  # Set a default value    
                         
-                tx_power = int(value[48:50], 16) - 256
+                try:
+                   tx_power = int(value[48:50], 16) - 256
+                except ValueError:
+                 # Handle the case where the substring is not a valid hexadecimal value
+                   tx_power = -59
                 rssi = dev.rssi
                 distance = ScanDelegate().estimateDistance(rssi, tx_power)
                 lat, lon = ScanDelegate().getLatLon(uuid, major, minor)
