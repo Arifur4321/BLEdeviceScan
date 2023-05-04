@@ -1,43 +1,31 @@
-import msgpack
-from bluedot import scanner, UID
+from pymavlink import mavutil
+from geopy.geocoders import Nominatim
 
-def print_temperature_and_pressure_values(device_id, temperature, pressure, altitude=None):
-    print(f"\nTemperature and Pressure values received from {device_id}:")
-    if altitude is not None:
-        print("\tAltitude:\t{}\t{}".format(*altitude))
-    else:
-        print("\tAltitude: Not available.")
-    print("\tTemperature: {}\t{}".format(*temperature))
-    print("\tPressure: {}".format(*pressure))
+# Define the MAVLink system ID and component ID
+system_id = 1
+component_id = 1
 
-def on_data_available(connection_handle, scan_record):
-    global device_id
-    message = scan_record.message.split("\x00")[-1].decode()
-    data = msgpack.loads(message)
-    
-    temperature = data["temperature"]
-    pressure = data["pressure"]
-    
-    if "altitude" in data:
-        altitude = data["altitude"]
-        
-        # Printing decoded tempertaure and pressue values here
-        print_temperature_and_pressure_values(str(device_id), temperature, pressure, altitude)
+# Connect to the MAVLink network and wait for a heartbeat message from a nearby device
+print("Connecting to MAVLink network...")
+mavlink_conn = mavutil.mavlink_connection('udp:0.0.0.0:14550')
+mavlink_conn.wait_heartbeat()
 
-device_id = str(int(time.time()))   # Unique identifier for each run of this program
-global_settings = {"name": "\u30C6"}    # Sets manufacturer specific global settings
-profile = scanner.ProfileFilter("Custom Filter Profile", serviceUUIDs=[uid], characteristicsUUIDs=[
-... '00000fff0-00000-1000-8000-00805f9b34fb8'] + serviceUUIDs, reportCharacteristics=['00000ffff-00000-1000-8000-00805f9b34fb8'], **serviceUUIDs, **characteristicsUUIDs, **global_settings)
-filtered = scanner.ServicesFilter('aerobit')
-discoverer = scanner.BaseDiscoveryOptions(['public', 'randomize_adv_filters'], 'discover_inq')
-proximity = [scanner.GAPRoleParameters('client'), 'any', [], False]
-options = {'timeout': 10}
-scanner = scanner.Scanner(device='hci0', discoverer=discoverer, options=options, services_filter=filtered, profiles=[profile], proximity=proximity, signal=-75)
-print("Start searching!")
-
+# Scan for nearby devices and print out their location
+print("Scanning for nearby devices...")
 while True:
-    try:
-        device = next(scanner.start_scan(blocking=True))
-        connection = device['connection']
-        connection.on_data_available.add_done_callback(lambda x : print("Done"))
-        connection.on_data_available.add_signal_listener(lambda x: print("Signal: "+`
+    # Send a request to the MAVLink network to get the GPS location of nearby devices
+    mavlink_conn.mav.command_long_send(
+        system_id, component_id,
+        mavutil.mavlink.MAV_CMD_GET_GPS_LOCATION,
+        0, 0, 0, 0, 0, 0, 0, 0)
+
+    # Wait for a GPS message from a nearby device and print out its location
+    msg = mavlink_conn.recv_match(type='GPS_RAW_INT', blocking=True, timeout=10)
+    if msg:
+        lat = msg.lat / 1e7
+        lon = msg.lon / 1e7
+        alt = msg.alt / 1e3
+        print("Device location: %f, %f, %f" % (lat, lon, alt))
+        geolocator = Nominatim(user_agent="my_app")
+        location = geolocator.reverse("%f, %f" % (lat, lon))
+        print("Device address:", location.address)
