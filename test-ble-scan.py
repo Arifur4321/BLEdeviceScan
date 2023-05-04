@@ -51,8 +51,19 @@ def get_location(mac_address):
     else:
         return None, None
 
+# Function to extract the 16-bit service data from the advertising data
+def get_service_data(dev):
+    service_data = {}
+    for (adtype, desc, value) in dev.getScanData():
+        if adtype == 22:  # 16-bit service data
+            uuid = value[:4]
+            data = value[4:]
+            service_data[uuid] = struct.unpack("<h", data)[0]
+    return service_data if service_data else None
+
+
 # Scan for Bluetooth devices and print out their information
-devices = scanner.scan(10.0)
+devices = scanner.scan(100.0)
 for dev in devices:
     print("Device address:", dev.addr)
     print("  Device name:", dev.getValueText(9))
@@ -60,3 +71,8 @@ for dev in devices:
     lat, lon = get_location(dev.addr)
     print("  Latitude:", lat)
     print("  Longitude:", lon)
+    service_data = get_service_data(dev)
+    if service_data:
+        print("  Service data:")
+        for key, value in service_data.items():
+            print("    {}: {}".format(key, value))
