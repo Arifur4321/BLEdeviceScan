@@ -1,51 +1,55 @@
-import bluetooth
-from geopy.distance import geodesic
+import requests
 from bluepy.btle import Scanner, DefaultDelegate
 
-# Define a custom delegate class for handling BLE scan results
+# Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
 
     def handleDiscovery(self, dev, isNewDev, isNewData):
         if isNewDev:
-            print("New Device: %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
+            print("Discovered device:", dev.addr)
+            print("  Device name:", dev.getValueText(9))
+            print("  RSSI:", dev.rssi)
+            location = get_location(dev.addr)
+            if location:
+                print("  Location: %f, %f" % (location['lat'], location['lng']))
         elif isNewData:
-            print("New Data for Device: %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
+            print("Received new data from device:", dev.addr)
 
-# Scan for nearby Bluetooth devices using PyBluez
-devices = bluetooth.discover_devices()
-
-# Initialize the BLE scanner and set the delegate to our custom class
+# Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
 
-# Scan for BLE devices and obtain their information
-ble_devices = scanner.scan(10.0)
+# Define the Google Maps Geolocation API endpoint and API key
+endpoint = "https://www.googleapis.com/geolocation/v1/geolocate"
+api_key = "AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
 
-# Iterate through the discovered devices
-for device in ble_devices:
-    # Get the device's address and name
-    address, name = bluetooth.lookup_name(device.addr)
+# Define a function to get the location of a Wi-Fi access point using the Google Maps Geolocation API
+def get_location(mac_address):
+    # Scan for nearby Wi-Fi access points and collect their MAC addresses and signal strengths
+    wifi_data = []
+    devices = scanner.scan(10.0)
+    for dev in devices:
+        for (adtype, desc, value) in dev.getScanData():
+            if desc == "Complete Local Name" and value == mac_address:
+                wifi_data.append({"macAddress": dev.addr, "signalStrength": dev.rssi})
 
-    # Get the device's Bluetooth class
-    device_class = bluetooth.lookup_class(device.addr)
+    # If at least one Wi-Fi access point was found, send a request to the Google Maps Geolocation API to get the location
+    if wifi_data:
+        payload = {"wifiAccessPoints": wifi_data}
+        headers = {"Content-Type": "application/json", "Authorization": "key=" + api_key}
+        response = requests.post(endpoint, json=payload, headers=headers)
+        if response.status_code == 200:
+            location = response.json()['location']
+            accuracy = response.json()['accuracy']
+            return {"lat": location['lat'], "lng": location['lng'], "accuracy": accuracy}
 
-    # Calculate the distance between the device and your location
-    #  distance = geodesic((<your_latitude>, <your_longitude>, <your_altitude>), (device.addr, device.addrType, device.rssi)).meters
-
-    # Get the device's altitude
-    altitude = device.getScanData()[2][2]
-
-    # Get the device's latitude and longitude
-    manufacturer_data = device.getScanData()[3][2]
-    latitude = int(manufacturer_data[2:10], 16) / 1000000.0
-    longitude = int(manufacturer_data[10:18], 16) / 1000000.0
-
-    # Print the device's information
-    print("Device Name: %s" % name)
-    print("Device Address: %s" % address)
-    print("Device Class: %s" % device_class)
-    #  print("Distance: %.2f meters" % distance)
-    print("Altitude: %.2f meters" % altitude)
-    print("Latitude: %.6f" % latitude)
-    print("Longitude: %.6f" % longitude)
+# Scan for Bluetooth devices and print out their information and location data
+devices = scanner.scan(10.0)
+for dev in devices:
+    print("Device address:", dev.addr)
+    print("  Device name:", dev.getValueText(9))
+    print("  RSSI:", dev.rssi)
+    location = get_location(dev.addr)
+    if location:
+        print("  Location: %f, %f (accuracy: %f meters)" % (location['lat'], location['lng'], location['accuracy']))
