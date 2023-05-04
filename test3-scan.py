@@ -22,8 +22,12 @@ class ScanDelegate(DefaultDelegate):
 
             print("  Estimated distance:", distance, "meters")
 
+                
+            print("  Advertising data:")
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
+                unique_id = value[6:22]
+                print("Unique identifier:", unique_id)
 
     def estimateDistance(self, rssi):
         # Calculate the distance based on the RSSI value using the log-distance path loss model
@@ -45,6 +49,9 @@ for dev in devices:
     # Estimate the distance based on the RSSI value
     distance = ScanDelegate().estimateDistance(dev.rssi)
     print("  Estimated distance:", distance, "meters")
-
+    
+    print("  Advertising data:")
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
+        unique_id = value[6:22]
+        print("Unique identifier:", unique_id)
