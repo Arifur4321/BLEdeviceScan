@@ -17,9 +17,10 @@ class ScanDelegate(DefaultDelegate):
             print("    %s: %s" % (desc, value))
             data_string = value
             data = bytes(bytearray.fromhex(data_string))
-            if data[0] == 255: # Check if the advertising data is manufacturer-specific
-                sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
-                print(sensor_msg)
+            ble_parser = BleParser()
+         # Check if the advertising data is manufacturer-specific
+            sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+            print("sensor data",sensor_msg)
 
 scanner = Scanner().withDelegate(ScanDelegate())
 scanner.scan(10.0) # Scan for 10 seconds
