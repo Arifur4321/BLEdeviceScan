@@ -25,7 +25,7 @@ class ScanDelegate(DefaultDelegate):
 scanner = Scanner().withDelegate(ScanDelegate())
 
 # Google Maps Geolocation API endpoint and API key
-url = "https://www.googleapis.com/geolocation/v1/geolocate?key=YOUR_API_KEY"
+url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
 
 # Function to get the latitude and longitude of a device using the Google Maps Geolocation API
 def get_location(mac_address):
