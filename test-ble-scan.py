@@ -1,6 +1,6 @@
 import requests
 import json
-from bluepy.btle import Scanner, DefaultDelegate
+from bluepy.btle import Scanner, DefaultDelegate, BTLEDisconnectError
 import struct
 import struct
 import asyncio
@@ -68,17 +68,20 @@ scanner = Scanner().withDelegate(ScanDelegate())
 
 # Continuously scan for Bluetooth devices and print out their information
 while True:
-    devices = scanner.scan(10.0)
-    for dev in devices:
-        print("Device address:", dev.addr)
-        print("  Device name:", dev.getValueText(9))
-        print("  RSSI:", dev.rssi)
-        lat, lon = get_location(dev.addr)
-        print("  Latitude:", lat)
-        print("  Longitude:", lon)
-        service_data = get_service_data(dev)
-        if service_data:
-            print("  Service data:")
-            for key, value in service_data.items():
-                print("    {}: {}".format(key, value))
+    try:
+        devices = scanner.scan(10.0)
+        for dev in devices:
+            print("Device address:", dev.addr)
+            print("  Device name:", dev.getValueText(9))
+            print("  RSSI:", dev.rssi)
+            lat, lon = get_location(dev.addr)
+            print("  Latitude:", lat)
+            print("  Longitude:", lon)
+            service_data = get_service_data(dev)
+            if service_data:
+                print("  Service data:")
+                for key, value in service_data.items():
+                    print("    {}: {}".format(key, value))
+    except BTLEDisconnectError:
+        print("Device disconnected")
     time.sleep(10)  # Delay for 10 seconds before scanning again
