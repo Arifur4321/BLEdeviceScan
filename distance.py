@@ -35,10 +35,10 @@ class ScanDelegate(DefaultDelegate):
                     discovery=False,
                     filter_duplicates=True
                 )
-                data = value 
+              
                 ## Define callback
-                def process_hci_events(data):
-                    sensor_data, tracker_data = parser.parse_raw_data(data)
+                def process_hci_events(value):
+                    sensor_data, tracker_data = parser.parse_raw_data(value)
 
                     if tracker_data:
                         print("Tracker data:", tracker_data)
@@ -77,10 +77,10 @@ class ScanDelegate(DefaultDelegate):
                     discovery=False,
                     filter_duplicates=True
                 )
-                data = value 
+                 
                 ## Define callback
-                def process_hci_events(data):
-                    sensor_data, tracker_data = parser.parse_raw_data(data)
+                def process_hci_events(value):
+                    sensor_data, tracker_data = parser.parse_raw_data(value)
 
                     if tracker_data:
                         print("Tracker data:", tracker_data)
@@ -172,8 +172,7 @@ while True:
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 #data = bytes(bytearray.fromhex(value))
-                data=value 
-                            
+                
                 ## Setup parser
                 parser = BleParser(
                     discovery=False,
@@ -181,8 +180,8 @@ while True:
                 )
 
                 ## Define callback
-                def process_hci_events(data):
-                    sensor_data, tracker_data = parser.parse_raw_data(data)
+                def process_hci_events(value):
+                    sensor_data, tracker_data = parser.parse_raw_data(value)
 
                     if tracker_data:
                         print("Tracker data:", tracker_data)
