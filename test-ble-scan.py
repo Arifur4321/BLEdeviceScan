@@ -5,6 +5,8 @@ import struct
 import struct
 import asyncio
 import bleak
+import time
+
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
@@ -20,9 +22,6 @@ class ScanDelegate(DefaultDelegate):
             print("  Longitude:", lon)
         elif isNewData:
             print("Received new data from device:", dev.addr)
-
-# Initialize the Bluetooth scanner and delegate
-scanner = Scanner().withDelegate(ScanDelegate())
 
 # Google Maps Geolocation API endpoint and API key
 url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
@@ -64,18 +63,22 @@ def get_service_data(dev):
             service_data[uuid] = struct.unpack("<h", data)[0]
     return service_data if service_data else None
 
+# Initialize the Bluetooth scanner and delegate
+scanner = Scanner().withDelegate(ScanDelegate())
 
-# Scan for Bluetooth devices and print out their information
-devices = scanner.scan(100.0)
-for dev in devices:
-    print("Device address:", dev.addr)
-    print("  Device name:", dev.getValueText(9))
-    print("  RSSI:", dev.rssi)
-    lat, lon = get_location(dev.addr)
-    print("  Latitude:", lat)
-    print("  Longitude:", lon)
-    service_data = get_service_data(dev)
-    if service_data:
-        print("  Service data:")
-        for key, value in service_data.items():
-            print("    {}: {}".format(key, value))
+# Continuously scan for Bluetooth devices and print out their information
+while True:
+    devices = scanner.scan(10.0)
+    for dev in devices:
+        print("Device address:", dev.addr)
+        print("  Device name:", dev.getValueText(9))
+        print("  RSSI:", dev.rssi)
+        lat, lon = get_location(dev.addr)
+        print("  Latitude:", lat)
+        print("  Longitude:", lon)
+        service_data = get_service_data(dev)
+        if service_data:
+            print("  Service data:")
+            for key, value in service_data.items():
+                print("    {}: {}".format(key, value))
+    time.sleep(10)  # Delay for 10 seconds before scanning again
