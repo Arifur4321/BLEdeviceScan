@@ -26,6 +26,15 @@ class ScanDelegate(DefaultDelegate):
         elif isNewData:
             print("Received new data from device:", dev.addr)
 
+
+        
+    def estimateDistance(self, rssi):
+            # Calculate the distance based on the RSSI value using the log-distance path loss model
+            # The constants used in this formula are based on empirical measurements and can vary depending on the environment
+        txPower = -59 # The transmit power of the BLE device in dBm
+        n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
+        return math.pow(10, (txPower - rssi) / (10 * n))
+
 # Google Maps Geolocation API endpoint and API key
 url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
 
@@ -67,12 +76,6 @@ def get_service_data(dev):
     return service_data if service_data else None
 
 
-def estimateDistance(self, rssi):
-        # Calculate the distance based on the RSSI value using the log-distance path loss model
-        # The constants used in this formula are based on empirical measurements and can vary depending on the environment
-    txPower = -59 # The transmit power of the BLE device in dBm
-    n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
-    return math.pow(10, (txPower - rssi) / (10 * n))
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
