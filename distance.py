@@ -30,10 +30,10 @@ class ScanDelegate(DefaultDelegate):
             print("  Advertising data:")
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
-                data = bytes(bytearray.fromhex(value))
+               #data = bytes(bytearray.fromhex(value))
 
                 ble_parser = BleParser()
-                sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+                sensor_msg, tracker_msg = ble_parser.parse_raw_data(value)
                 print(sensor_msg)
 
 
@@ -44,10 +44,10 @@ class ScanDelegate(DefaultDelegate):
             print("  Advertising data:")
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
-                data = bytes(bytearray.fromhex(value))
+                #data = bytes(bytearray.fromhex(value))
 
                 ble_parser = BleParser()
-                sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+                sensor_msg, tracker_msg = ble_parser.parse_raw_data(value)
                 print(sensor_msg)
 
         
@@ -117,10 +117,10 @@ while True:
             print("  Advertising data:")
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
-                data = bytes(bytearray.fromhex(value))
+                #data = bytes(bytearray.fromhex(value))
 
                 ble_parser = BleParser()
-                sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+                sensor_msg, tracker_msg = ble_parser.parse_raw_data(value)
                 print(sensor_msg)
 
             lat, lon = get_location(dev.addr)
