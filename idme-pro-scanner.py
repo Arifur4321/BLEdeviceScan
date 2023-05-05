@@ -1,9 +1,8 @@
-               
 from bleparser import BleParser
 
-data_string = "faff0d7d12200701005cbe0a182732cd0ab9075d08f4074a63d98b0100"
+data_string = "043e2502010000219335342d5819020106151695fe5020aa01da219335342d580d1004fe004802c4"
 data = bytes(bytearray.fromhex(data_string))
-
+print ("data" ,data)
 ble_parser = BleParser()
 sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
 print(sensor_msg)
