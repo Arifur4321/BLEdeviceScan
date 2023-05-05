@@ -26,7 +26,7 @@ class ScanDelegate(DefaultDelegate):
             data = bytes.fromhex(dev.getValueText(22))
             print("data",data)
             ble_parser = BleParser()
-            sensor_msg, tracker_msg = ble_parser.parse_raw_data(dev.getValueText(22))
+            sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
             print("Sensor data:", sensor_msg)
 
  

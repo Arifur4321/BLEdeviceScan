@@ -1,22 +1,9 @@
-from bluepy.btle import Scanner, DefaultDelegate
+               
+from bleparser import BleParser
 
-# Define a custom delegate class to handle Bluetooth device events
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
+data_string = "faff0d7d12200701005cbe0a182732cd0ab9075d08f4074a63d98b0100"
+data = bytes(bytearray.fromhex(data_string))
 
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            print("Discovered device:", dev.addr)
-        elif isNewData:
-            print("Received new data from device:", dev.addr)
-
-# Initialize the Bluetooth scanner and delegate
-scanner = Scanner().withDelegate(ScanDelegate())
-
-# Scan for Bluetooth devices and print out their advertising data
-devices = scanner.scan(10.0)
-for dev in devices:
-    print("Device address:", dev.addr)
-    for (adtype, desc, value) in dev.getScanData():
-        print("  %s = %s" % (desc, value))
+ble_parser = BleParser()
+sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+print(sensor_msg)
