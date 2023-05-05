@@ -1,26 +1,22 @@
-from bluepy.btle import Scanner, DefaultDelegate
+from bleparser import BleParser
+from scapy.all import *
 from bleparser import BleParser
 
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
-
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            print("Discovered device:", dev.addr)
-        elif isNewData:
-            print("Received new data from", dev.addr)
-
-        # Parse the advertising data using BleParser
+# Define the BLE and Wi-Fi sniffing functions
+def ble_sniff(pkt):
+    if pkt.haslayer(ScanResponse):
+        data = bytes(pkt.getlayer(ScanResponse).payload)
         ble_parser = BleParser()
-        for (adtype, desc, value) in dev.getScanData():
-            print("    %s: %s" % (desc, value))
-            data_string = value
-            data = bytes(bytearray.fromhex(data_string))
-            ble_parser = BleParser()
-         # Check if the advertising data is manufacturer-specific
-            sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
-            print("sensor data",sensor_msg)
+        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+        print("BLE Sensor Message:", sensor_msg)
 
-scanner = Scanner().withDelegate(ScanDelegate())
-scanner.scan(10.0) # Scan for 10 seconds
+def wifi_sniff(pkt):
+    if pkt.haslayer(Dot11ProbeResp):
+        print("Wi-Fi Probe Response:", pkt.summary())
+
+# Start the BLE and Wi-Fi sniffers
+sniff(prn=ble_sniff, filter="type mgt and subtype beacon", iface="wlan0mon")
+sniff(prn=wifi_sniff, filter="type mgt and subtype probe-resp", iface="wlan0mon")
+
+
+ 
