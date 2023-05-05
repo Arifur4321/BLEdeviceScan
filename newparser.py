@@ -7,7 +7,7 @@ import bleak
 import requests
 from bluepy.btle import Scanner, DefaultDelegate, BTLEDisconnectError
 import aioblescan as aiobs
-from newparser import BleParser
+from bleparser import BleParser
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):

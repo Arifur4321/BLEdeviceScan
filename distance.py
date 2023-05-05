@@ -70,14 +70,32 @@ class ScanDelegate(DefaultDelegate):
     def parseAdvertisingData(self, dev):
         for (adtype, desc, value) in dev.getScanData():
             print(f"    {desc}: {value}")
-            if adtype == 22:  # 16-bit service data
-                service_data = self.parseServiceData(value)
-                if service_data:
-                    print("  Service data:")
-                    for key, value in service_data.items():
-                        print(f"    {key}: {value}")
-            else:
-                self.parseSensorData(value)
+            parser = BleParser(discovery=False, filter_duplicates=True)
+
+            # Define callback
+            def process_hci_events(value):
+                sensor_data, tracker_data = parser.parse_raw_data(value)
+
+                if tracker_data:
+                    print("  Tracker data:", tracker_data)
+
+                if sensor_data:
+                    print("  Sensor data:", sensor_data)
+
+            # Get everything connected
+            loop = asyncio.get_event_loop()
+
+            # Setup socket and controller
+            socket = aiobs.create_bt_socket(0)
+            fac = getattr(loop, "_create_connection_transport")(socket, aiobs.BLEScanRequester, None, None)
+            conn, btctrl = loop.run_until_complete(fac)
+
+            # Attach callback
+            btctrl.process = process_hci_events
+            loop.run_until_complete(btctrl.send_scan_request(0))
+
+            # Run forever
+            loop.run_forever()
 
     def parseServiceData(self, value):
         service_data = {}
