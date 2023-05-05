@@ -6,7 +6,8 @@ import struct
 import asyncio
 import bleak
 import time
-
+import math
+import msgpack
 from bleparser import BleParser
 
 # Define a custom delegate class to handle Bluetooth device events
