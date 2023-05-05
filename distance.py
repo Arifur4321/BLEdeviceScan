@@ -3,12 +3,13 @@ import json
 import struct
 import asyncio
 import math
+import time
 import aioblescan as aiobs
 from bleparser import BleParser
 from bluepy.btle import Scanner, DefaultDelegate, BTLEDisconnectError
 
 # Google Maps Geolocation API endpoint and API key
-GEOLOCATION_API_URL = "https://www.googleapis.com/geolocation/v1/geolocate?key=YOUR_API_KEY"
+GEOLOCATION_API_URL = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
@@ -72,44 +73,7 @@ class ScanDelegate(DefaultDelegate):
             print(f"    {desc}: {value}")
             parser = BleParser(discovery=False, filter_duplicates=True)
 
-            # Define callback
-            def process_hci_events(value):
-                sensor_data, tracker_data = parser.parse_raw_data(value)
-
-                if tracker_data:
-                    print("  Tracker data:", tracker_data)
-
-                if sensor_data:
-                    print("  Sensor data:", sensor_data)
-
-            # Get everything connected
-            loop = asyncio.get_event_loop()
-
-            # Setup socket and controller
-            socket = aiobs.create_bt_socket(0)
-            fac = getattr(loop, "_create_connection_transport")(socket, aiobs.BLEScanRequester, None, None)
-            conn, btctrl = loop.run_until_complete(fac)
-
-            # Attach callback
-            btctrl.process = process_hci_events
-            loop.run_until_complete(btctrl.send_scan_request(0))
-
-            # Run forever
-            loop.run_forever()
-
-    def parseServiceData(self, value):
-        service_data = {}
-        uuid = value[:4]
-        data = value[4:]
-        service_data[uuid] = struct.unpack("<h", data)[0]
-        return service_data if service_data else None
-
-    def parseSensorData(self, value):
-        # Setup parser
-        parser = BleParser(discovery=False, filter_duplicates=True)
-
-        # Define callback
-        def process_hci_events(value):
+        
             sensor_data, tracker_data = parser.parse_raw_data(value)
 
             if tracker_data:
@@ -118,20 +82,9 @@ class ScanDelegate(DefaultDelegate):
             if sensor_data:
                 print("  Sensor data:", sensor_data)
 
-        # Get everything connected
-        loop = asyncio.get_event_loop()
-
-        # Setup socket and controller
-        socket = aiobs.create_bt_socket(0)
-        fac = getattr(loop, "_create_connection_transport")(socket, aiobs.BLEScanRequester, None, None)
-        conn, btctrl = loop.run_until_complete(fac)
-
-        # Attach callback
-        btctrl.process = process_hci_events
-        loop.run_until_complete(btctrl.send_scan_request(0))
-
-        # Run forever
-        loop.run_forever()
+  
+ 
+ 
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
@@ -151,47 +104,16 @@ while True:
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 #data = bytes(bytearray.fromhex(value))
-                
-                ## Setup parser
-                parser = BleParser(
-                    discovery=False,
-                    filter_duplicates=True
-                )
+             
 
-                ## Define callback
-                def process_hci_events(value):
-                    sensor_data, tracker_data = parser.parse_raw_data(value)
+      
+    
 
-                    if tracker_data:
-                        print("Tracker data:", tracker_data)
-
-                    if sensor_data:
-                        print("Sensor data:", sensor_data)
-
-
-                ## Get everything connected
-                loop = asyncio.get_event_loop()
-
-                #### Setup socket and controller
-                socket = aiobs.create_bt_socket(0)
-                fac = getattr(loop, "_create_connection_transport")(socket, aiobs.BLEScanRequester, None, None)
-                conn, btctrl = loop.run_until_complete(fac)
-
-                #### Attach callback
-                btctrl.process = process_hci_events
-                loop.run_until_complete(btctrl.send_scan_request(0))
-
-                ## Run forever
-                loop.run_forever()
-
-            lat, lon = get_location(dev.addr)
+            lat, lon =  ScanDelegate().getLocation(dev.addr)
             print("  Latitude:", lat)
             print("  Longitude:", lon)
-            service_data = get_service_data(dev)
-            if service_data:
-                print("  Service data:")
-                for key, value in service_data.items():
-                    print("    {}: {}".format(key, value))
+         
+                 
     except BTLEDisconnectError:
         print("Device disconnected")
     time.sleep(10)  # Delay for 10 seconds before scanning again
