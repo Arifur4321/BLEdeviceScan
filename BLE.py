@@ -1,22 +1,22 @@
+from bluepy.btle import Scanner, DefaultDelegate
 from bleparser import BleParser
-from scapy.all import *
-from bleparser import BleParser
 
-# Define the BLE and Wi-Fi sniffing functions
-def ble_sniff(pkt):
-    if pkt.haslayer(ScanResponse):
-        data = bytes(pkt.getlayer(ScanResponse).payload)
-        ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
-        print("BLE Sensor Message:", sensor_msg)
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
 
-def wifi_sniff(pkt):
-    if pkt.haslayer(Dot11ProbeResp):
-        print("Wi-Fi Probe Response:", pkt.summary())
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+        if isNewDev:
+            print("Discovered device", dev.addr)
+        elif isNewData:
+            print("Received new data from", dev.addr)
 
-# Start the BLE and Wi-Fi sniffers
-sniff(prn=ble_sniff, filter="type mgt and subtype beacon", iface="wlan0mon")
-sniff(prn=wifi_sniff, filter="type mgt and subtype probe-resp", iface="wlan0mon")
+        # Check if the device is advertising sensor data
+        if dev.getValueText(22) is not None:
+            data = bytes.fromhex(dev.getValueText(22))
+            ble_parser = BleParser()
+            sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
+            print("Sensor data:", sensor_msg)
 
-
- 
+scanner = Scanner().withDelegate(ScanDelegate())
+devices = scanner.scan(10.0)
