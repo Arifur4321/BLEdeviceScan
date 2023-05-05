@@ -13,10 +13,11 @@ class ScanDelegate(DefaultDelegate):
 
         # Parse the advertising data using BleParser
         ble_parser = BleParser()
-        sensor_msg, tracker_msg = ble_parser.parse_raw_data(bytes(dev.getScanData()))
-
-        # Print the sensor message
-        print(sensor_msg)
+        advertising_data = dev.getScanData()
+        for data in advertising_data:
+            if data[0] == 255: # Check if the advertising data is manufacturer-specific
+                sensor_msg, tracker_msg = ble_parser.parse_raw_data(bytes(data[2]))
+                print(sensor_msg)
 
 scanner = Scanner().withDelegate(ScanDelegate())
 scanner.scan(10.0) # Scan for 10 seconds
