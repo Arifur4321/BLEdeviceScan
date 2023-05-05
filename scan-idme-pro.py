@@ -8,7 +8,7 @@ import bleak
 import time
 import math
 import msgpack
-from bleparser import BleParser
+from newparser import BleParser
 
 # Define a custom delegate class to handle Bluetooth device events
 class ScanDelegate(DefaultDelegate):
@@ -25,9 +25,7 @@ class ScanDelegate(DefaultDelegate):
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 
-                ble_parser = BleParser()
-                sensor_msg, tracker_msg = ble_parser.parse_raw_data(value)
-                print(sensor_msg)
+              
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
@@ -44,9 +42,6 @@ while True:
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 
-                ble_parser = BleParser()
-                sensor_msg, tracker_msg = ble_parser.parse_raw_data(value)
-                print(sensor_msg)
     except BTLEDisconnectError:
         print("Device disconnected")
     time.sleep(10)  # Delay for 10 seconds before scanning again   
