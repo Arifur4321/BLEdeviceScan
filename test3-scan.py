@@ -27,7 +27,7 @@ class ScanDelegate(DefaultDelegate):
             for (adtype, desc, value) in dev.getScanData():
                 print("    %s: %s" % (desc, value))
                 
-                odid_data = msgpack.unpackb(bytes.fromhex(value[10:]), raw=False)
+                odid_data = msgpack.unpackb(bytes.fromhex(value[10:]), raw=True)
                         # Print the decoded data
                 print("ODID MessagePack data received from device:", dev.addr)
                 print(odid_data)
@@ -57,7 +57,7 @@ for dev in devices:
     for (adtype, desc, value) in dev.getScanData():
         print("    %s: %s" % (desc, value))
          
-        odid_data = msgpack.unpackb(bytes.fromhex(value[10:]), raw=False)
+        odid_data = msgpack.unpackb(bytes.fromhex(value[10:]), raw=True)
                         # Print the decoded data
         print("ODID MessagePack data received from device:", dev.addr)
         print(odid_data)
