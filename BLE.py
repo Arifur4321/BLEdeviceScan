@@ -1,14 +1,6 @@
 from bluepy.btle import Scanner, DefaultDelegate
-from bleparser import BleParser
-import requests
-import json
 import struct
-import asyncio
-import math
 import time
-import aioblescan as aiobs
-from bleparser import BleParser
-from bluepy.btle import Scanner, DefaultDelegate, BTLEDisconnectError
 
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
@@ -20,16 +12,26 @@ class ScanDelegate(DefaultDelegate):
         elif isNewData:
             print("Received new data from", dev.addr)
 
-        # Check if the device is advertising sensor data
+        # Check if the device is advertising ODID nominal data
         if dev.getValueText(22) is not None:
-            print("dev.getValueText(22) :",dev.getValueText(22))
             data = bytes.fromhex(dev.getValueText(22))
-            print("data",data)
-            ble_parser = BleParser()
-            sensor_msg, tracker_msg = ble_parser.parse_raw_data(data)
-            print("Sensor data:", sensor_msg)
+            if len(data) == 20 and data[0] == 0x0A:
+                # Parse the ODID nominal data
+                version = data[1]
+                uid = struct.unpack("<I", data[2:6])[0]
+                timestamp = struct.unpack("<I", data[6:10])[0]
+                latitude = struct.unpack("<i", data[10:14])[0] / 10**7
+                longitude = struct.unpack("<i", data[14:18])[0] / 10**7
+                altitude = struct.unpack("<i", data[18:20])[0] / 10
 
- 
+                # Print the parsed data
+                print("ODID Nominal Data:")
+                print("Version:", version)
+                print("UID:", uid)
+                print("Timestamp:", timestamp)
+                print("Latitude:", latitude)
+                print("Longitude:", longitude)
+                print("Altitude:", altitude)
 
 # Initialize the Bluetooth scanner and delegate
 scanner = Scanner().withDelegate(ScanDelegate())
@@ -41,4 +43,4 @@ while True:
 
     except BTLEDisconnectError:
         print("Device disconnected")
-    time.sleep(10)  # Delay for 10 seconds before scanning again    
+    time.sleep(10)  # Delay for 10 seconds before scanning again
