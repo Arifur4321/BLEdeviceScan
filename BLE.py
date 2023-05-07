@@ -43,7 +43,7 @@ while True:
     # Send a POST request to the Google Maps Geolocation API with the MAC addresses of nearby devices
     if nearby_macs:
         print ("nearby mac :",nearby macs)
-        url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCpasDcXodV68gDih_mbXLsffkMANSJh_I"
+        url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBqyGDMUcp4FZPGL6XICmX9ImxYzpIH99M"
         data = {
             "considerIp": "false",
             "wifiAccessPoints": [{"macAddress": mac} for mac in nearby_macs]
