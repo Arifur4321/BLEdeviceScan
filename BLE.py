@@ -1,7 +1,8 @@
 import requests
 import json
 from bluepy.btle import Scanner, DefaultDelegate
-import math
+import math 
+
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
@@ -39,12 +40,16 @@ while True:
         for (adtype, desc, value) in dev.getScanData():
             print("  %s = %s" % (desc, value))
 
-    # Send a POST request to the HERE Geolocation API with the MAC addresses of nearby devices
+    # Send a POST request to the Google Maps Geolocation API with the MAC addresses of nearby devices
     if nearby_macs:
-        url = "https://pos.ls.hereapi.com/positioning/v1/locate?apiKey=1I5F_1Fz95TQXMQ4ZVqyXzcwzEVIpvBS69nXA9xvvcw"
+        print ("nearby mac :",nearby macs)
+        url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCpasDcXodV68gDih_mbXLsffkMANSJh_I"
         data = {
-            "wlan": [{"mac": mac} for mac in nearby_macs]
+            "considerIp": "false",
+            "wifiAccessPoints": [{"macAddress": mac} for mac in nearby_macs]
         }
+        print ("data :",data)
+        print ("mac :", mac)
         headers = {"Content-Type": "application/json"}
         response = requests.post(url, data=json.dumps(data), headers=headers)
         if response.status_code == 200:
