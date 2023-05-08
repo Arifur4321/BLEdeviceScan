@@ -29,7 +29,7 @@ scanner = Scanner().withDelegate(ScanDelegate())
 nearby_macs = []
 
 # Set your Mapbox API key token
-mapbox_api_key = "sk.eyJ1IjoiYXJhaG1hbjMyMSIsImEiOiJjbGhlcHlvYWMwMTR3M25wZmJtZ3hwdWNqIn0.rU1nBTup7G13kx8nEGkE8g"
+mapbox_api_key = "pk.eyJ1IjoiYXJhaG1hbjMyMSIsImEiOiJjbGhlcHdxcjUxaXR3M2ZwY3RvdmxhbmI0In0.f0o6dYiSgHdYvjQs8qvywA"
 
 while True:
     # Scan for BLE devices for 10 seconds
