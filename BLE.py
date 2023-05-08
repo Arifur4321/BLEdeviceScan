@@ -49,9 +49,10 @@ while True:
             "wifiAccessPoints": [{"macAddress": mac} for mac in nearby_macs]
         }
         print ("data :",data)
-        print ("mac :", mac)
+     
         headers = {"Content-Type": "application/json"}
         response = requests.post(url, data=json.dumps(data), headers=headers)
+        print ("response from apikey:",response)
         if response.status_code == 200:
             location = response.json()["location"]
             print("Estimated location:", location["lat"], location["lng"])
