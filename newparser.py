@@ -28,8 +28,8 @@ scanner = Scanner().withDelegate(ScanDelegate())
 # Initialize a list to store the MAC addresses of nearby devices
 nearby_macs = []
 
-# Set your Mapbox API key token
-mapbox_api_key = "sk.eyJ1IjoiYXJhaG1hbjMyMSIsImEiOiJjbGhlcHlvYWMwMTR3M25wZmJtZ3hwdWNqIn0.rU1nBTup7G13kx8nEGkE8g"
+# Set up the OpenCageData API credentials
+api_key = "f940ee19fdd24a87a0e48f8523e1cec1"
 
 while True:
     # Scan for BLE devices for 10 seconds
@@ -43,19 +43,20 @@ while True:
         for (adtype, desc, value) in dev.getScanData():
             print("  %s = %s" % (desc, value))
 
-    # Send a POST request to the Mapbox Geolocation API with the MAC addresses of nearby devices
+    # Send a GET request to the OpenCageData API with the MAC addresses of nearby devices
     if nearby_macs:
         print ("nearby mac :",nearby_macs)
-        url = "https://api.mapbox.com/geocoding/v5/mapbox.places.json?access_token=" + mapbox_api_key
-        data = {
-            "wifi": [{"mac": mac} for mac in nearby_macs]
+        url = "https://api.opencagedata.com/geocode/v1/json"
+        params = {
+            "q": "",
+            "key": api_key,
+            "macs": ",".join(nearby_macs)
         }
-        print ("data :",data)
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(url, data=json.dumps(data), headers=headers)
+        print ("params :",params)
+        response = requests.get(url, params=params)
         if response.status_code == 200:
-            location = response.json()["features"][0]["center"]
-            print("Estimated location:", location[1], location[0])
+            location = response.json()["results"][0]["geometry"]
+            print("Estimated location:", location["lat"], location["lng"])
         else:
             print("Error:", response.status_code, response.text)
 
