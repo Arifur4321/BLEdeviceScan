@@ -1,48 +1,30 @@
-from bluepy.btle import Scanner, DefaultDelegate
 from pymavlink import mavutil
 
-class ScanDelegate(DefaultDelegate):
-    def __init__(self):
-        DefaultDelegate.__init__(self)
+# Set the UDP port number for MAVLink communication
+udp_port = 14550
 
-    def handleDiscovery(self, dev, isNewDev, isNewData):
-        if isNewDev:
-            print("Discovered device:", dev.addr)
-        elif isNewData:
-            print("Received new data from device:", dev.addr)
+# Connect to the MAVLink device using the specified UDP port
+mavlink_connection = mavutil.mavlink_connection('udp:0.0.0.0:{}'.format(udp_port))
 
-# Create a scanner object and set the delegate to handle incoming advertisements
-scanner = Scanner().withDelegate(ScanDelegate())
+# Enable scanning mode to search for nearby devices
+mavlink_connection.mav.command_long_send(
+    mavlink_connection.target_system,  # Target system ID
+    mavlink_connection.target_component,  # Target component ID
+    mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,  # Command ID
+    0,  # Confirmation
+    mavutil.mavlink.MAVLINK_MSG_ID_RADIO_STATUS,  # Message ID
+    1000000,  # Interval between messages (in microseconds)
+    0, 0, 0, 0, 0  # Parameters (not used)
+)
 
-# Start scanning for BLE devices
-devices = scanner.scan(10.0)
+# Loop through each MAVLink message received from the device
+while True:
+    message = mavlink_connection.recv_match()
+    if message:
+        # Check if the message is a RADIO_STATUS message (sent by the IDME Pro)
+        if message.get_type() == 'RADIO_STATUS':
+            # Extract the advertising data from the message
+            advertising_data = message.data
 
-# Loop through each discovered device
-for dev in devices:
-    # Check if the device is advertising using the MAVLink protocol
-    if dev.getValueText(255) and dev.getValueText(255).startswith("0x"):
-        # Extract the MAC address of the device
-        mac_address = dev.addr
-
-        # Extract the signal strength of the packet
-        signal_strength = dev.rssi
-
-        # Print out information about the packet
-        print("MAVLink packet received:")
-        print("  MAC address:", mac_address)
-        print("  Signal strength:", signal_strength)
-
-        # Connect to the device using the MAC address
-        mavlink_connection = mavutil.mavlink_connection("ble://" + mac_address)
-
-        # Loop through each MAVLink message received from the device
-        while True:
-            message = mavlink_connection.recv_match()
-            if message:
-                # Decode the MAVLink message
-                decoded_message = message.to_dict()
-
-                # Print out information about the message
-                print("MAVLink message received:")
-                print("  Message ID:", decoded_message["msgid"])
-                print("  Message:", decoded_message)
+            # Print out the advertising data
+            print('Advertising data:', advertising_data)
