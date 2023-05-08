@@ -54,6 +54,7 @@ while True:
         }
         print ("params :",params)
         response = requests.get(url, params=params)
+        print ("response :",response)
         if response.status_code == 200:
             location = response.json()["results"][0]["geometry"]
             print("Estimated location:", location["lat"], location["lng"])
