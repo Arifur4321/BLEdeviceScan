@@ -48,7 +48,6 @@ while True:
         print ("nearby mac :",nearby_macs)
         url = "https://api.opencagedata.com/geocode/v1/json"
         params = {
-            "q": "",
             "key": api_key,
             "macs": ",".join(nearby_macs)
         }
@@ -56,10 +55,16 @@ while True:
         response = requests.get(url, params=params)
         print ("response :",response)
         if response.status_code == 200:
-            location = response.json()["results"][0]["geometry"]
-            print("Estimated location:", location["lat"], location["lng"])
+            results = response.json()["results"]
+            for result in results:
+                location = result["geometry"]
+                print("MAC address:", result["annotations"]["mac"]["address"])
+                print("  Latitude:", location["lat"])
+                print("  Longitude:", location["lng"])
         else:
             print("Error:", response.status_code, response.text)
+    else:
+        print("No nearby devices found")
 
     # Clear the list of nearby MAC addresses for the next scan
     nearby_macs = []
