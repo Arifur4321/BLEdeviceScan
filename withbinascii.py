@@ -16,14 +16,12 @@ class ScanDelegate(DefaultDelegate):
         elif isNewData:
             print("Received new data from device:", dev.addr)
             # Check if the received data is an ASTM F3411 / ASD-STAN 4709-002 UAV direct remote identification signal
-            if dev.addrType == "public" and dev.rssi > -70:
-                try:
-                    data = bytes.fromhex(dev.getValueText(255))
-                    decoded_data = decoders.uav_direct_remote_id(data)
-                    print("Decoded UAV direct remote identification signal from device:", dev.addr)
-                    print("Decoded UAV data:",decoded_data)
-                except:
-                    pass
+            
+            data = bytes.fromhex(dev.getValueText(255))
+            decoded_data = decoders.uav_direct_remote_id(data)
+            print("Decoded UAV direct remote identification signal from device:", dev.addr)
+            print("Decoded UAV data:",decoded_data)
+                
 
     def estimateDistance(self, rssi):
         # Calculate the distance based on the RSSI value using the log-distance path loss model
