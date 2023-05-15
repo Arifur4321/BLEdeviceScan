@@ -53,3 +53,5 @@ while True:
     # Print information about each discovered device
     for dev in devices:
         print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
+
+         
