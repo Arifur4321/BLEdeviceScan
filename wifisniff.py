@@ -5,6 +5,8 @@ capture = pyshark.LiveCapture(interface='wlan1', display_filter='wlan.fc.type_su
 
 # Start the Wi-Fi sniffing loop
 for packet in capture.sniff_continuously():
+
+    print('all Wi-Fi RID packets:', packet)
     # Check if the packet is a Wi-Fi RID packet
     if 'wlan_mgt.rsn_ie' in packet:
         # Print the Wi-Fi RID details
