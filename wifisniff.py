@@ -1,6 +1,7 @@
 import pyshark
 
 # Set up the Wi-Fi sniffer
+#capture = pyshark.LiveCapture(interface='wlan1', display_filter='wlan.fc.type_subtype == 0x0d')
 capture = pyshark.LiveCapture(interface='wlan1', display_filter='wlan.fc.type_subtype == 0x08 && wlan_mgt.tag_vendor_specific.oui == 0x001bc50f')
 
 # Start the Wi-Fi sniffing loop
