@@ -1,51 +1,54 @@
-#!/usr/bin/python
-#
-# A very simple python-pcapy example for monitor mode WiFi sniffing.
-#
-# Usage example:
-#   $ python pcapySniffer.py mon0
+################################################################################
+# Wifi Sniffer
+################################################################################
 
-import pcapy
-import sys
-import os
-import datetime
+import streams
+from espressif.esp32net import esp32wifi as wifi_driver
 
 
-def main():
-    if len(sys.argv) != 2:
-        print ("Available devices:")
-        print 
-        devices = pcapy.findalldevs()
+try:
+    streams.serial()
+    #let's init the driver
+    wifi_driver.auto_init()
+except Exception as e:
+    print("ooops, something wrong with the driver", e)
+    while True:
+        sleep(1000)
 
-        for device in devices:
-            print (device)
+try:
 
-        print
-        print ("Usage: ./%s deviceName"), sys.argv[0]
-        exit()
+    while True:
+        # loop over all channels
+        for channel in  [1,2,3,4,5,6,7,8,9,10,11,12,13]:
+            print("Sniffing channel",channel)
+            print("================")
+            # start the sniffer for management and data packets
+            # on the current channel
+            # filtering packets going in and out of DS, and also packets with no direction
+            # keep a buffer of 128 packets
+            # but don't store the payloads (max_payloads=0)
+            wifi_driver.start_sniffer(
+                packet_types=[wifi_driver.WIFI_PKT_DATA,wifi_driver.WIFI_PKT_MGMT],
+                channels = [channel],
+                direction = wifi_driver.WIFI_DIR_TO_DS_FROM_NULL | wifi_driver.WIFI_DIR_TO_NULL_FROM_DS | wifi_driver.WIFI_DIR_TO_NULL_FROM_NULL,
+                pkt_buffer=128,
+                max_payloads=0)
 
-    dev = sys.argv[1]
+            # The sniffer is sniffing :)
+            # let's loop for 10 seconds on each channel
+            seconds = 0
+            while seconds<10:
+                sleep(1000)
+                seconds+=1
+                pkts = wifi_driver.sniff()
+                for pkt in pkts:
+                    print(pkt[:-1])  # print everything except the payload
+                # let's also check some sniffing stats 
+                print("Stats",wifi_driver.get_sniffer_stats())
 
-    print ("Trying to set monitor mode for device ") + dev + "..."
-    os.system("ifconfig " + dev + " down")
-    os.system("iwconfig " + dev + " mode monitor")
-    os.system("ifconfig " + dev + " up")
-    print ("Done. If you don't see any data, the monitor mode setup may have failed.")
+            # This is not necessary, we can go back to the loop and call start_sniffer again
+            # but let's call stop nonetheless
+            wifi_driver.stop_sniffer()
 
-    cap = pcapy.open_live(dev, 65536, True, 0)
-
-    print
-    print ("Listening on %s: net=%s, mask=%s, linktype=%d" % (dev, cap.getnet(), cap.getmask(), cap.datalink()))
-
-    (header, payload) = cap.next()
-    while header:
-        print ('%s: captured %d bytes, truncated to %d bytes'
-               % (datetime.datetime.now(), header.getlen(), header.getcaplen()))
-
-        # TODO: Implement python-impacket in order to decode the captured packet and show his information
-
-        (header, payload) = cap.next()
-
-
-if __name__ == "__main__":
-    main()
+except Exception as e:
+    print(e)
