@@ -1,54 +1,32 @@
-################################################################################
-# Wifi Sniffer
-################################################################################
+#!/usr/bin/env python3
 
-import streams
-from espressif.esp32net import esp32wifi as wifi_driver
+import codecs
+from scapy.all import *
 
 
-try:
-    streams.serial()
-    #let's init the driver
-    wifi_driver.auto_init()
-except Exception as e:
-    print("ooops, something wrong with the driver", e)
-    while True:
-        sleep(1000)
+def handler(p):
+    if not (p.haslayer(Dot11ProbeResp) or p.haslayer(Dot11ProbeReq) or p.haslayer(Dot11Beacon)):
+        return
 
-try:
+    rssi = p[RadioTap].dBm_AntSignal
+    dst_mac = p[Dot11].addr1
+    src_mac = p[Dot11].addr2
+    ap_mac = p[Dot11].addr2
+    info = f"rssi={rssi:2}dBm, dst={dst_mac}, src={src_mac}, ap={ap_mac}"
 
-    while True:
-        # loop over all channels
-        for channel in  [1,2,3,4,5,6,7,8,9,10,11,12,13]:
-            print("Sniffing channel",channel)
-            print("================")
-            # start the sniffer for management and data packets
-            # on the current channel
-            # filtering packets going in and out of DS, and also packets with no direction
-            # keep a buffer of 128 packets
-            # but don't store the payloads (max_payloads=0)
-            wifi_driver.start_sniffer(
-                packet_types=[wifi_driver.WIFI_PKT_DATA,wifi_driver.WIFI_PKT_MGMT],
-                channels = [channel],
-                direction = wifi_driver.WIFI_DIR_TO_DS_FROM_NULL | wifi_driver.WIFI_DIR_TO_NULL_FROM_DS | wifi_driver.WIFI_DIR_TO_NULL_FROM_NULL,
-                pkt_buffer=128,
-                max_payloads=0)
+    if p.haslayer(Dot11ProbeResp):
+        ssid = codecs.decode(p[Dot11Elt].info, 'utf-8')
+        channel = ord(p[Dot11Elt:3].info)
+        print(f"[ProbResp] {info}, chan={channel}, ssid=\"{ssid}\"")
+    elif p.haslayer(Dot11ProbeReq):
+        print(f"[ProbReq ] {info}")
+    elif p.haslayer(Dot11Beacon):
+        stats = p[Dot11Beacon].network_stats()
+        ssid = str(stats['ssid'])
+        channel = ord(p[Dot11Elt:3].info)
+        interval = p[Dot11Beacon].beacon_interval
+        print(f"[Beacon  ] {info}, chan={channel}, interval={interval}, ssid=\"{ssid}\"")
 
-            # The sniffer is sniffing :)
-            # let's loop for 10 seconds on each channel
-            seconds = 0
-            while seconds<10:
-                sleep(1000)
-                seconds+=1
-                pkts = wifi_driver.sniff()
-                for pkt in pkts:
-                    print(pkt[:-1])  # print everything except the payload
-                # let's also check some sniffing stats 
-                print("Stats",wifi_driver.get_sniffer_stats())
 
-            # This is not necessary, we can go back to the loop and call start_sniffer again
-            # but let's call stop nonetheless
-            wifi_driver.stop_sniffer()
-
-except Exception as e:
-    print(e)
+if __name__ == "__main__":
+    sniff(iface="wlan1", prn=handler, store=0)
