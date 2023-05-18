@@ -1,24 +1,37 @@
-from btlejack import ACLStream
-from scapy.layers.bluetooth import *
+from bluepy.btle import Scanner, DefaultDelegate, Peripheral
 
-# Create an ACL stream object to capture BLE packets
-stream = ACLStream()
+class ScanDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
 
-# Start capturing packets on the HCI interface
-stream.start_hci_capture()
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+        if isNewDev:
+            print("Discovered device:", dev.addr)
+        elif isNewData:
+            print("Received new data from device:", dev.addr)
 
-# Process incoming packets
+# Create a scanner object and set the delegate to handle incoming advertisements
+scanner = Scanner().withDelegate(ScanDelegate())
+
+# Start scanning for BLE devices
 while True:
-    # Get the next packet from the stream
-    packet = stream.get_packet()
+    devices = scanner.scan(10.0)
 
-    # Check if the packet is a BLE data packet
-    if packet.type == ACLDataPacket:
-        # Decode the packet using the scapy Bluetooth layer
-        decoded_packet = Bluetooth(packet.data)
+    # Print information about each discovered device
+    for dev in devices:
+        print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
 
-        # Print out information about the packet
-        print("BLE packet received:")
-        print("  Source address:", decoded_packet.src)
-        print("  Destination address:", decoded_packet.dst)
-        print("  Payload:", decoded_packet.payload)
+        # Connect to the device and retrieve its characteristics
+        try:
+            peripheral = Peripheral(dev.addr, "public")
+            characteristics = peripheral.getCharacteristics()
+
+            # Read the value of each characteristic to capture packets
+            for characteristic in characteristics:
+                value = characteristic.read()
+                print("Packet:", value)
+
+            peripheral.disconnect()
+
+        except:
+            pass
