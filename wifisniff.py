@@ -13,29 +13,29 @@ import datetime
 
 def main():
     if len(sys.argv) != 2:
-        print "Available devices:"
-        print
+        print ("Available devices:")
+        print 
         devices = pcapy.findalldevs()
 
         for device in devices:
-            print device
+            print (device)
 
         print
-        print "Usage: ./%s deviceName", sys.argv[0]
+        print ("Usage: ./%s deviceName"), sys.argv[0]
         exit()
 
     dev = sys.argv[1]
 
-    print "Trying to set monitor mode for device " + dev + "..."
+    print ("Trying to set monitor mode for device ") + dev + "..."
     os.system("ifconfig " + dev + " down")
     os.system("iwconfig " + dev + " mode monitor")
     os.system("ifconfig " + dev + " up")
-    print "Done. If you don't see any data, the monitor mode setup may have failed."
+    print ("Done. If you don't see any data, the monitor mode setup may have failed.")
 
     cap = pcapy.open_live(dev, 65536, True, 0)
 
     print
-    print "Listening on %s: net=%s, mask=%s, linktype=%d" % (dev, cap.getnet(), cap.getmask(), cap.datalink())
+    print ("Listening on %s: net=%s, mask=%s, linktype=%d" % (dev, cap.getnet(), cap.getmask(), cap.datalink()))
 
     (header, payload) = cap.next()
     while header:
