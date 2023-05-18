@@ -1,32 +1,14 @@
-#!/usr/bin/env python3
+import pyshark
 
-import codecs
-from scapy.all import *
+# Set up the Wi-Fi sniffer
+capture = pyshark.LiveCapture(interface='wlan1', display_filter='wlan.fc.type_subtype == 0x08')
 
+# Start the Wi-Fi sniffing loop
+for packet in capture.sniff_continuously():
 
-def handler(p):
-    if not (p.haslayer(Dot11ProbeResp) or p.haslayer(Dot11ProbeReq) or p.haslayer(Dot11Beacon)):
-        return
+    # Check if the packet has a 16-bit service data field
+    if hasattr(packet, 'wlan_mgt.tag_vendor_specific') and '16-bit Service Data' in packet.wlan_mgt.tag_vendor_specific:
+        print('Wi-Fi packet with 16-bit service data:', packet)
 
-    rssi = p[RadioTap].dBm_AntSignal
-    dst_mac = p[Dot11].addr1
-    src_mac = p[Dot11].addr2
-    ap_mac = p[Dot11].addr2
-    info = f"rssi={rssi:2}dBm, dst={dst_mac}, src={src_mac}, ap={ap_mac}"
-
-    if p.haslayer(Dot11ProbeResp):
-        ssid = codecs.decode(p[Dot11Elt].info, 'utf-8')
-        channel = ord(p[Dot11Elt:3].info)
-        print(f"[ProbResp] {info}, chan={channel}, ssid=\"{ssid}\"")
-    elif p.haslayer(Dot11ProbeReq):
-        print(f"[ProbReq ] {info}")
-    elif p.haslayer(Dot11Beacon):
-        stats = p[Dot11Beacon].network_stats()
-        ssid = str(stats['ssid'])
-        channel = ord(p[Dot11Elt:3].info)
-        interval = p[Dot11Beacon].beacon_interval
-        print(f"[Beacon  ] {info}, chan={channel}, interval={interval}, ssid=\"{ssid}\"")
-
-
-if __name__ == "__main__":
-    sniff(iface="wlan1", prn=handler, store=0)
+        # Print out details of the 16-bit service data
+        print('Service data:', packet.wlan_mgt.tag_vendor_specific['16-bit Service Data'])
