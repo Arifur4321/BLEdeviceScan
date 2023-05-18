@@ -64,11 +64,13 @@ while True:
     # Print information about each discovered device
     for dev in devices:
         print("Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi))
-        distance = ScanDelegate().estimateDistance(dev.rssi)
-        print("  Estimated distance:", distance, "meters")
+        for (adtype, desc, value) in dev.getScanData():
+            print("  %s = %s" % (desc, value))
+            distance = ScanDelegate().estimateDistance(dev.rssi)
+            print("  Estimated distance:", distance, "meters")
 
-        # Start capturing packets on the WiFi and Bluetooth interfaces
-        sniff(iface="wlan1", prn=handle_wifi_packet)
-        sniff(iface="hci0", prn=handle_bluetooth_packet)
+            # Start capturing packets on the WiFi and Bluetooth interfaces
+            sniff(iface="wlan1", prn=handle_wifi_packet)
+            sniff(iface="hci0", prn=handle_bluetooth_packet)
 
          
