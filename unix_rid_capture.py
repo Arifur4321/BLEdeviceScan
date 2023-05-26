@@ -3,6 +3,7 @@ import requests
 import json
 from bluepy.btle import Scanner, DefaultDelegate
 import math 
+import struct
 
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
@@ -13,7 +14,18 @@ class ScanDelegate(DefaultDelegate):
             print("Discovered device:", dev.addr)
         elif isNewData:
             print("Received new data from device:", dev.addr)
+            for (adtype, desc, value) in dev.getScanData():
+              if adtype == 255: # 255 matches manufacturer-specific data
+                  # Extract manufacturer-specific data
+                  data = bytes.fromhex(value[4:]) # Remove prefix "0xff" and convert to bytes
 
+                  # Decodes manufacturer specific data
+                  # Process the decoded data as per your requirement
+                  decoded_data = struct.unpack("<H", data[:2])[0]
+
+                  print("Manufacturer data:", decoded_data)
+
+                  
     def estimateDistance(self, rssi):
         # Calculate the distance based on the RSSI value using the log-distance path loss model
         # The constants used in this formula are based on empirical measurements and can vary depending on the environment
