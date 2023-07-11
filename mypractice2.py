@@ -37,8 +37,8 @@ def decode_service_data(service_data):
 	direction = service_data[2] & 0b00000011
 	speed = service_data[3]
 	vert_speed = service_data[4]
-	ua_latitude = struct.unpack('!I', service_data[5:9])[0]
-	ua_longitude = struct.unpack('!I', service_data[9:13])[0]
+	#ua_latitude = struct.unpack('!I', service_data[5:9])[0]
+	#ua_longitude = struct.unpack('!I', service_data[9:13])[0]
 	ua_pressure_altitude = struct.unpack('!H', service_data[13:15])[0]
 	ua_geodetic_altitude = struct.unpack('!H', service_data[15:17])[0]
 	ua_height_agl = struct.unpack('!H', service_data[17:19])[0]
@@ -49,6 +49,39 @@ def decode_service_data(service_data):
 	timestamp = struct.unpack('!H', service_data[21:23])[0]
 	reserved = (service_data[23] & 0b11110000) >> 4
 	timestamp_accuracy = service_data[23] & 0b00001111
+
+
+   # Decode the latitude and longitude fields
+	latitude_bits = service_data[5:9]
+	longitude_bits = service_data[9:13]
+	latitude = decode_latitude(latitude_bits)
+	longitude = decode_longitude(longitude_bits)
+
+	# Define the function to decode the latitude field
+	def decode_latitude(bits):
+		# Convert the bits to a decimal value
+		latitude_decimal = 0
+		for i, bit in enumerate(bits):
+			latitude_decimal += bit * 2**(23-i)
+
+		# Convert the decimal value to degrees and decimal minutes
+		latitude_degrees = latitude_decimal // 10**7
+		latitude_minutes = latitude_decimal % 10**7 / 60
+
+		return f"{latitude_degrees:.6f}, {latitude_minutes:.6f}"
+
+	# Define the function to decode the longitude field
+	def decode_longitude(bits):
+		# Convert the bits to a decimal value
+		longitude_decimal = 0
+		for i, bit in enumerate(bits):
+			longitude_decimal += bit * 2**(23-i)
+
+		# Convert the decimal value to degrees and decimal minutes
+		longitude_degrees = longitude_decimal // 10**7
+		longitude_minutes = longitude_decimal % 10**7 / 60
+
+		return f"{longitude_degrees:.6f}, {longitude_minutes:.6f}"  
 
 	# Print the decoded fields
 	print("Message Counter:", message_counter)
@@ -61,8 +94,8 @@ def decode_service_data(service_data):
 	print("Direction:", direction)
 	print("Speed:", speed)
 	print("Vert Speed:", vert_speed)
-	print("UA Latitude:", ua_latitude)
-	print("UA Longitude:", ua_longitude)
+	print("UA Latitude:", latitude)
+	print("UA Longitude:", longitude)
 	print("UA Pressure Altitude:", ua_pressure_altitude)
 	print("UA Geodetic Altitude:", ua_geodetic_altitude)
 	print("UA Height AGL:", ua_height_agl)
