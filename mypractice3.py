@@ -1,3 +1,4 @@
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from bluepy import btle
 import binascii
 import struct
@@ -5,41 +6,45 @@ import math
 import pyshark
 # Define the Open Drone ID service UUID
 ODID_SERVICE_UUID = "00020001-0000-1000-8000-00805F9B34FB"
-
 class ODIDScanDelegate(btle.DefaultDelegate):
     def __init__(self):
         btle.DefaultDelegate.__init__(self)
-    
+        self.httpd = None
+
     def handleDiscovery(self, dev, isNewDev, isNewData):
         if isNewDev:
             print("Discovering")
-        
+
         if isNewData:
             for (adtype, desc, value) in dev.getScanData():
 
                 if adtype == 22 and desc == "16b Service Data":
                     print("opendroneid:", dev.addr)
                     print("16b service data", value)
-                   # parse_packet(value)
-		   
 
                     if value.startswith("faff"):
                         print("The string starts with 'faff'")
                         service_data = binascii.unhexlify(value)
                         decode_service_data(service_data)
+
+                        # Serve the index.html file when a device is found
+                        if self.httpd is None:
+                            self.httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
+                            print("Serving index.html on http://localhost:8000/")
+                            self.httpd.serve_forever()
+
                         print("Device RSSI :", dev.rssi)
-                        distance =ODIDScanDelegate().estimateDistance(dev.rssi)
+                        distance = ODIDScanDelegate().estimateDistance(dev.rssi)
                         print("  Estimated distance:", distance, "meters")
 
                     else:
                         print("This not opendroneid data")
-
     def estimateDistance(self, rssi):
-        # Calculate the distance based on the RSSI value using the log-distance path loss model
-        # The constants used in this formula are based on empirical measurements and can vary depending on the environment
-        txPower = -59 # The transmit power of the BLE device in dBm
-        n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
-        return math.pow(10, (txPower - rssi) / (10 * n))   
+            # Calculate the distance based on the RSSI value using the log-distance path loss model
+            # The constants used in this formula are based on empirical measurements and can vary depending on the environment
+            txPower = -59 # The transmit power of the BLE device in dBm
+            n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
+            return math.pow(10, (txPower - rssi) / (10 * n))   
 
                     
 def decode_latitude(bits):
