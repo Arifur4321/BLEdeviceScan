@@ -1,7 +1,8 @@
 from bluepy import btle
 import binascii
 import struct
-
+import math 
+import pyshark
 # Define the Open Drone ID service UUID
 ODID_SERVICE_UUID = "00020001-0000-1000-8000-00805F9B34FB"
 
@@ -27,11 +28,18 @@ class ODIDScanDelegate(btle.DefaultDelegate):
                         service_data = binascii.unhexlify(value)
                         decode_service_data(service_data)
                         print("Device RSSI :", dev.rssi)
-                        distance = estimateDistance(dev.rssi)
+                        distance =ODIDScanDelegate().estimateDistance(dev.rssi)
                         print("  Estimated distance:", distance, "meters")
 
                     else:
                         print("This not opendroneid data")
+
+    def estimateDistance(self, rssi):
+        # Calculate the distance based on the RSSI value using the log-distance path loss model
+        # The constants used in this formula are based on empirical measurements and can vary depending on the environment
+        txPower = -59 # The transmit power of the BLE device in dBm
+        n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
+        return math.pow(10, (txPower - rssi) / (10 * n))   
 
                     
 def decode_latitude(bits):
@@ -60,12 +68,7 @@ def decode_longitude(bits):
 		longitude_minutes = longitude_decimal % 10**7 / 60
 
 		return f"{longitude_degrees:.6f}, {longitude_minutes:.6f}"  
-def estimateDistance(self, rssi):
-        # Calculate the distance based on the RSSI value using the log-distance path loss model
-        # The constants used in this formula are based on empirical measurements and can vary depending on the environment
-        txPower = -59 # The transmit power of the BLE device in dBm
-        n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
-        return math.pow(10, (txPower - rssi) / (10 * n))   
+
 
 def decode_service_data(service_data):
     # Example decoding logic
