@@ -85,8 +85,12 @@ def decode_service_data(service_data):
 	direction = service_data[2] & 0b00000011
 	speed = service_data[3]
 	vert_speed = service_data[4]
-	latitude =  struct.unpack('!I',service_data[5:9])[0]
-	longitude = struct.unpack('!I',service_data[9:13])[0]
+    latitude = struct.unpack('!f', struct.pack('!I', service_data[5:9]))[0]
+    longitude = struct.unpack('!f', struct.pack('!I', service_data[9:13]))[0]
+	#latitude =  struct.unpack('!I',service_data[5:9])[0]
+    #longitude = struct.unpack('!I',service_data[9:13])[0]
+    #latitude =  int.from_bytes(packet_bytes[5:9], byteorder='big', signed=True) / 10**7
+    #longitude = int.from_bytes(packet_bytes[9:13], byteorder='big', signed=True) / 10**7  
 	#latitude = int.from_bytes(service_data[5:9], byteorder='big', signed=True)
 	#longitude = int.from_bytes(service_data[9:13], byteorder='big', signed=True)
 	#latitude= service_data[5:9]
