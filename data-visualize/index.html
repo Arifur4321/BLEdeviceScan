@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Open Drone ID Scanner</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        function updateData() {
+            fetch('/data')
+               .then(response => response.json())
+               .then(data => {
+                    document.getElementById('message-counter').textContent = data.messageCounter;
+                    document.getElementById('message-type').textContent = data.messageType;
+                    document.getElementById('protocol-version').textContent = data.protocolVersion;
+                    document.getElementById('operational-status').textContent = data.operationalStatus;
+                    document.getElementById('height-type').textContent = data.heightType;
+                    document.getElementById('direction').textContent = data.direction;
+                    document.getElementById('speed').textContent = data.speed;
+                    document.getElementById('vert-speed').textContent = data.vertSpeed;
+                    document.getElementById('latitude').textContent = data.latitude;
+                    document.getElementById('longitude').textContent = data.longitude;
+                    document.getElementById('pressure-altitude').textContent = data.pressureAltitude;
+                    document.getElementById('geodetic-altitude').textContent = data.geodeticAltitude;
+                    document.getElementById('height-agl').textContent = data.heightAGL;
+                    document.getElementById('horizontal-accuracy').textContent = data.horizontalAccuracy;
+                    document.getElementById('vertical-accuracy').textContent = data.verticalAccuracy;
+                    document.getElementById('baro-accuracy').textContent = data.baroAccuracy;
+                    document.getElementById('speed-accuracy').textContent = data.speedAccuracy;
+                    document.getElementById('timestamp').textContent = data.timestamp;
+                    document.getElementById('timestamp-accuracy').textContent = data.timestampAccuracy;
+                });
+        }
+        setInterval(updateData, 1000);
+    </script>
+</head>
+<body>
+    <h1>Open Drone ID Scanner</h1>
+    <p>Message Counter: <span id="message-counter"></span></p>
+    <p>Message Type: <span id="message-type"></span></p>
+    <p>Protocol Version: <span id="protocol-version"></span></p>
+    <p>Operational Status: <span id="operational-status"></span></p>
+    <p>Height Type: <span id="height-type"></span></p>
+    <p>Direction: <span id="direction"></span></p>
+    <p>Speed: <span id="speed"></span></p>
+    <p>Vert Speed: <span id="vert-speed"></span></p>
+    <p>Latitude: <span id="latitude"></span></p>
+    <p>Longitude: <span id="longitude"></span></p>
+    <p>Pressure Altitude: <span id="pressure-altitude"></span></p>
+    <p>Geodetic Altitude: <span id="geodetic-altitude"></span></p>
+    <p>Height AGL: <span id="height-agl"></span></p>
+    <p>Horizontal Accuracy: <span id="horizontal-accuracy"></span></p>
+    <p>Vertical Accuracy: <span id="vertical-accuracy"></span></p>
+    <p>Baro Accuracy: <span id="baro-accuracy"></span></p>
+    <p>Speed Accuracy: <span id="speed-accuracy"></span></p>
+    <p>Timestamp: <span id="timestamp"></span></p>
+    <p>Timestamp Accuracy: <span id="timestamp-accuracy"></span></p>
+</body>
+</html>
