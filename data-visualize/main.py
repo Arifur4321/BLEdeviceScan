@@ -8,7 +8,10 @@ import math
 import pyshark
 
 app = Flask(__name__)
- 
+
+
+
+
 
 
 
@@ -34,12 +37,20 @@ class ODIDScanDelegate(btle.DefaultDelegate):
                         print("The string starts with 'faff'")
                         service_data = binascii.unhexlify(value)
                         decode_service_data(service_data)
+                        @app.route('/')
+                        def index():
+                            getall=decode_service_data(service_data)
+                             
+                             # TODO: Implement code to decode and display the decoded data in the browser
+                            return render_template('index.html',data=getall)
 
+                        if __name__ == '__main__':
+                             app.run(debug=True)
                         # Serve the index.html file when a device is found
-                        if self.httpd is None:
-                            self.httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
-                            print("Serving index.html on http://localhost:8000/")
-                            self.httpd.serve_forever()
+                        #if self.httpd is None:
+                         #   self.httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
+                          #  print("Serving index.html on http://localhost:8000/")
+                           # self.httpd.serve_forever()
 
                         print("Device RSSI :", dev.rssi)
                         distance = ODIDScanDelegate().estimateDistance(dev.rssi)
@@ -198,7 +209,7 @@ scanner = btle.Scanner().withDelegate(ODIDScanDelegate())
 
 # Scan for nearby devices broadcasting ODID service UUID
 devices = scanner.scan(timeout=10)
-service_data = null 
+service_data = None 
 # Print the scanned devices and their service data
 while True:
     devices = scanner.scan(timeout=10)
@@ -221,11 +232,3 @@ while True:
 
 
 
-
-@app.route('/')
-def index():
-    # TODO: Implement code to decode and display the decoded data in the browser
-    return render_template('index.html', decode_service_data(service_data))
-
-if __name__ == '__main__':
-    app.run(debug=True)
