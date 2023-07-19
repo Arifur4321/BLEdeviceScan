@@ -1,6 +1,7 @@
 from flask import Flask, render_template
  
-
+#from app import app
+from livereload import Server
 from bluepy import btle
 import binascii
 import struct
@@ -37,15 +38,19 @@ class ODIDScanDelegate(btle.DefaultDelegate):
                         print("The string starts with 'faff'")
                         service_data = binascii.unhexlify(value)
                         decode_service_data(service_data)
-                        @app.route('/')
-                        def index():
-                            getall=decode_service_data(service_data)
+                        #@app.route('/')
+                        #def index():
+                         #   getall=decode_service_data(service_data)
                              
                              # TODO: Implement code to decode and display the decoded data in the browser
-                            return render_template('index.html',data=getall)
+                           # return render_template('index.html',data=getall)
 
-                        if __name__ == '__main__':
-                             app.run(debug=True)
+                        #if __name__ == '__main__':
+                         #    app.run(debug=True)
+                        
+                            # server  =Server(app.wsgi_app)
+                            # server.watch("templates/*.*")
+                            # server.serve(port=5000)
                         # Serve the index.html file when a device is found
                         #if self.httpd is None:
                          #   self.httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
@@ -103,7 +108,7 @@ def decode_longitude(bits):
 def decode_service_data(service_data):
     # Example decoding logic
     # Modify this based on the actual structure and format of the service data
-    decoded_data = [] 
+	decoded_data = [] 
 
 	    # Decode the fields
 	message_counter = service_data[0]
@@ -119,7 +124,7 @@ def decode_service_data(service_data):
     #latitude = struct.unpack('!f', struct.pack('!I', service_data[5:9]))[0]
     #longitude = struct.unpack('!f', struct.pack('!I', service_data[9:13]))[0]
 	latitude =  struct.unpack('!I',service_data[5:9])[0]
-    longitude = struct.unpack('!I',service_data[9:13])[0]
+	longitude = struct.unpack('!I',service_data[9:13])[0]
     #latitude =  int.from_bytes(packet_bytes[5:9], byteorder='big', signed=True) / 10**7
     #longitude = int.from_bytes(packet_bytes[9:13], byteorder='big', signed=True) / 10**7  
 	#latitude = int.from_bytes(service_data[5:9], byteorder='big', signed=True)
@@ -176,30 +181,30 @@ def decode_service_data(service_data):
 
 
      # Store the decoded data in the decoded_data list
-    decoded_data.append(message_counter)
-    decoded_data.append(message_type)
-    decoded_data.append(protocol_version)
-    decoded_data.append(operational_status)
-    decoded_data.append(height_type)
-    decoded_data.append(east_west_direction)
-    decoded_data.append(speed_multiplier)
-    decoded_data.append(direction)
-    decoded_data.append(speed)
-    decoded_data.append(vert_speed)
-    decoded_data.append(latitude)
-    decoded_data.append(longitude)
-    decoded_data.append(ua_pressure_altitude)
-    decoded_data.append(ua_geodetic_altitude)
-    decoded_data.append(ua_height_agl)
-    decoded_data.append(horizontal_accuracy)
-    decoded_data.append(vertical_accuracy)
-    decoded_data.append(baro_accuracy)
-    decoded_data.append(speed_accuracy)
-    decoded_data.append(timestamp)
-    decoded_data.append(reserved)
-    decoded_data.append(timestamp_accuracy)
+	decoded_data.append(message_counter)
+	decoded_data.append(message_type)
+	decoded_data.append(protocol_version)
+	decoded_data.append(operational_status)
+	decoded_data.append(height_type)
+	decoded_data.append(east_west_direction)
+	decoded_data.append(speed_multiplier)
+	decoded_data.append(direction)
+	decoded_data.append(speed)
+	decoded_data.append(vert_speed)
+	decoded_data.append(latitude)
+	decoded_data.append(longitude)
+	decoded_data.append(ua_pressure_altitude)
+	decoded_data.append(ua_geodetic_altitude)
+	decoded_data.append(ua_height_agl)
+	decoded_data.append(horizontal_accuracy)
+	decoded_data.append(vertical_accuracy)
+	decoded_data.append(baro_accuracy)
+	decoded_data.append(speed_accuracy)
+	decoded_data.append(timestamp)
+	decoded_data.append(reserved)
+	decoded_data.append(timestamp_accuracy)
 
-    return decoded_data
+	return decoded_data
 
 
 
@@ -226,6 +231,19 @@ while True:
                     print("The string starts with 'faff'")
                     service_data = binascii.unhexlify(value)
                     decode_service_data(service_data)
+                    @app.route('/')
+                    def index():
+                         getall=decode_service_data(service_data)
+
+                             # TODO: Implement code to decode and display the decoded data in the browser
+                         return render_template('index.html',data=getall)
+
+                    if __name__ == '__main__':
+                         app.run(debug=True)
+                         #server  =Server(app.wsgi_app)
+                         #server.watch("templates/*.*")
+                         #server.serve(port=5000)
+
 
                 else:
                     print("This not opendroneid data")

@@ -1,0 +1,109 @@
+<!DOCTYPEhtml>
+<html>
+<head>
+      <title>Open Drone ID Scanner</title>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+</head>
+<body>
+      <table>
+          <head>
+            <tr>
+              <th>Field Name</th>
+              <th>Value</th>
+            </tr>
+          </thehead>
+          <body>
+            <tr>
+              <td>Message Counter</td>
+              <td>{{ data[0] }}</td>
+            </tr>
+            <tr>
+              <td>Message type</td>
+              <td>{{ data[1] }}</td>
+            </tr>
+            <tr>
+              <td>Protocol version</td>
+              <td>{{ data[2] }}</td>
+            </tr>
+            <tr>
+              <td>Operational status</td>
+              <td>{{ 'In flight' if data[3] == 2 else 'Not in flight' }}</td>
+            </tr>
+            <tr>
+              <td>Height type</td>
+              <td>{{ 'Above takeoff' if data[4] == 0 else 'Above ground level' }}</td>
+            </tr>
+            <tr>
+              <td>East/West direction</td>
+              <td>{{ data[5] }}</td>
+            </tr>
+            <tr>
+              <td>Speed multiplier</td>
+              <td>{{ data[6] }}</td>
+            </tr>
+            <tr>
+              <td>Direction</td>
+              <td>{{ data[7] }}</td>
+            </tr>
+            <tr>
+              <td>Speed</td>
+              <td>{{ data[8] }}</td>
+            </tr>
+            <tr>
+              <td>Vertical speed</td>
+              <td>{{ data[9] }}</td>
+            </tr>
+            <tr>
+              <td>Latitude</td>
+              <td>{{ data[10] }}</td>
+            </tr>
+            <tr>
+              <td>Longitude</td>
+              <td>{{ data[11] }}</td>
+            </tr>
+            <tr>
+              <td>Altitude Uncertainty</td>
+              <td>{{ data[12] }}</td>
+            </tr>
+            <tr>
+              <td>Geodetic altitude</td>
+              <td>{{ data[13] }}</td>
+            </tr>
+            <tr>
+              <td>Geodesic height above the ellipsoid</td>
+              <td>{{ data[14] }}</td>
+            </tr>
+            <tr>
+              <td>Horizontal accuracy</td>
+              <td>{{ data[15] }}</td>
+            </tr>
+            <tr>
+              <td>Vertical accuracy</td>
+              <td>{{ data[16] }}</td>
+            </tr>
+            <tr>
+              <td>Cheater accuracy</td>
+              <td>{{ data[17] }}</td>
+            </tr>
+            <tr>
+              <td>Speed accuracy</td>
+              <td>{{ data[18] }}</td>
+            </tr>
+            <tr>
+              <td>Date and time</td>
+              <td>{{ data[19] }}</td>
+            </tr>
+            <tr>
+              <td>Reserved</td>
+              <td>{{ data[20] }}</td>
+            </tr>
+            <tr>
+              <td>Time stamp accuracy</td>
+              <td>{{ data[21] }}</td>
+            </tr>
+          </tbody>
+        </table>
+</body>
+</html>
