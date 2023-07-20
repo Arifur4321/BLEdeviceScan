@@ -8,12 +8,7 @@ import struct
 import math 
 import pyshark
 
-app = Flask(__name__)
-
-
-
-
-
+#app = Flask(__name__)
 
 
 # Define the Open Drone ID service UUID
@@ -36,7 +31,12 @@ class ODIDScanDelegate(btle.DefaultDelegate):
 
                     if value.startswith("faff"):
                         print("The string starts with 'faff'")
-                        service_data = binascii.unhexlify(value)
+                        string =value
+                        prefix,rest =string.split("faff",1)
+                        print("service data raw :", rest ) 
+                        service_data = binascii.unhexlify(rest)
+                        print("service data :", service_data)
+                        print("service data list:",list(service_data))  
                         decode_service_data(service_data)
                         #@app.route('/')
                         #def index():
@@ -68,9 +68,8 @@ class ODIDScanDelegate(btle.DefaultDelegate):
             # The constants used in this formula are based on empirical measurements and can vary depending on the environment
             txPower = -59 # The transmit power of the BLE device in dBm
             n = 2.0 # The path loss exponent, which depends on the environment (e.g. free space, indoors, etc.)
-            return math.pow(10, (txPower - rssi) / (10 * n))   
+            return math.pow(10, (txPower - rssi) / (10 * n))
 
-                    
 def decode_latitude(bits):
 		# Convert the bits to a decimal value
 		latitude_decimal = 0
@@ -96,7 +95,7 @@ def decode_longitude(bits):
 		longitude_degrees = longitude_decimal // 10**7
 		longitude_minutes = longitude_decimal % 10**7 / 60
 
-		return f"{longitude_degrees:.6f}, {longitude_minutes:.6f}"  
+		return f"{longitude_degrees:.6f}, {longitude_minutes:.6f}"
 
 
 
@@ -112,38 +111,38 @@ def decode_service_data(service_data):
 
 	    # Decode the fields
 	message_counter = service_data[0]
-	message_type = (service_data[1] & 0b11110000) >> 4
-	protocol_version = service_data[1] & 0b00001111
-	operational_status = (service_data[2] & 0b10000000) >> 7
-	height_type = (service_data[2] & 0b01000000) >> 6
-	east_west_direction = (service_data[2] & 0b00100000) >> 5
-	speed_multiplier = (service_data[2] & 0b00011100) >> 2
-	direction = service_data[2] & 0b00000011
-	speed = service_data[3]
-	vert_speed = service_data[4]
+	message_type = (service_data[0] & 0b11110000) >> 4
+	protocol_version = service_data[0] & 0b00001111
+	operational_status = (service_data[1] & 0b10000000) >> 7
+	height_type = (service_data[1] & 0b01000000) >> 6
+	east_west_direction = (service_data[1] & 0b00100000) >> 5
+	speed_multiplier = (service_data[1] & 0b00011100) >> 2
+	direction = service_data[1] & 0b00000011
+	speed = service_data[2]
+	vert_speed = service_data[3]
     #latitude = struct.unpack('!f', struct.pack('!I', service_data[5:9]))[0]
     #longitude = struct.unpack('!f', struct.pack('!I', service_data[9:13]))[0]
-	latitude =  struct.unpack('!I',service_data[5:9])[0]
-	longitude = struct.unpack('!I',service_data[9:13])[0]
+	latitude =  struct.unpack('!I',service_data[4:8])[0]
+	longitude = struct.unpack('!I',service_data[8:12])[0]
     #latitude =  int.from_bytes(packet_bytes[5:9], byteorder='big', signed=True) / 10**7
     #longitude = int.from_bytes(packet_bytes[9:13], byteorder='big', signed=True) / 10**7  
 	#latitude = int.from_bytes(service_data[5:9], byteorder='big', signed=True)
 	#longitude = int.from_bytes(service_data[9:13], byteorder='big', signed=True)
-	#latitude= service_data[5:9]
+	latitudenn= service_data[4:8]
 	#longitude=service_data[9:13]       
     # Convert latitude and longitude to decimal degrees with 4 decimal places
 	#latitude = latitude_int / 10**7
 	#longitude = longitude_int / 10**7
-	ua_pressure_altitude = struct.unpack('!H', service_data[13:15])[0]
-	ua_geodetic_altitude = struct.unpack('!H', service_data[15:17])[0]
-	ua_height_agl = struct.unpack('!H', service_data[17:19])[0]
-	horizontal_accuracy = (service_data[19] & 0b11110000) >> 4
-	vertical_accuracy = service_data[19] & 0b00001110
-	baro_accuracy = (service_data[19] & 0b00000001) << 2
-	speed_accuracy = service_data[20]
-	timestamp = struct.unpack('!H', service_data[21:23])[0]
-	reserved = (service_data[23] & 0b11110000) >> 4
-	timestamp_accuracy = service_data[23] & 0b00001111
+	ua_pressure_altitude = struct.unpack('!H', service_data[12:14])[0]
+	ua_geodetic_altitude = struct.unpack('!H', service_data[14:16])[0]
+	ua_height_agl = struct.unpack('!H', service_data[16:18])[0]
+	horizontal_accuracy = (service_data[18] & 0b11110000) >> 4
+	vertical_accuracy = service_data[18] & 0b00001110
+	baro_accuracy = (service_data[18] & 0b00000001) << 2
+	speed_accuracy = service_data[19]
+	timestamp = struct.unpack('!H', service_data[20:22])[0]
+	reserved = (service_data[22] & 0b11110000) >> 4
+	timestamp_accuracy = service_data[22] & 0b00001111
 
 
    # Decode the latitude and longitude fields
@@ -156,17 +155,19 @@ def decode_service_data(service_data):
 
 	# Print the decoded fields
 	print("Open Drone ID Advertisement:")
-	print(f"Message Counter: {message_counter}")+
+	print(f"Message Counter: {message_counter}")
 	print("Open Drone ID - Location/Vector Message")
 	print(f"Message Type: Location/Vector ({message_type})")
 	print(f"Protocol Version: F3411-22 ({protocol_version})")
-	print(f"Operational Status: {'Airborne' if operational_status == 2 else 'Not Airborne'}")
+	#print(f"Operational Status: {'Airborne' if operational_status == 2 else 'Not Airborne'}")
+	print("Operational Status :"," Airbrone ")
 	print(f"Height Type: {'Above Takeoff' if height_type == 0 else 'Above Ground Level'}")
 	print(f"Direction: {direction}")
    
 	print("Speed:", speed)
 	print("Vert Speed:", vert_speed)
 	print("UA Latitude:", latitude)
+	print("latitudenn ",latitudenn)
 	print("UA Longitude:", longitude)
 	print("UA Pressure Altitude:", ua_pressure_altitude)
 	print("UA Geodetic Altitude:", ua_geodetic_altitude)
@@ -217,7 +218,7 @@ devices = scanner.scan(timeout=10)
 service_data = None 
 # Print the scanned devices and their service data
 while True:
-    devices = scanner.scan(timeout=10)
+    devices = scanner.scan(timeout=1000)
 
     # Print the scanned devices and their service data
     for dev in devices:
@@ -229,17 +230,19 @@ while True:
                 #parse_packet(value) 
                 if value.startswith("faff"):
                     print("The string starts with 'faff'")
-                    service_data = binascii.unhexlify(value)
+                    string=value
+                    prefix,rest=string.split("faff",1)
+                    service_data = binascii.unhexlify(rest)
                     decode_service_data(service_data)
-                    @app.route('/')
-                    def index():
-                         getall=decode_service_data(service_data)
+                   # @app.route('/')
+                    #def index():
+                     #    getall=decode_service_data(service_data)
 
                              # TODO: Implement code to decode and display the decoded data in the browser
-                         return render_template('index.html',data=getall)
+                      #   return render_template('index.html',data=getall)
 
-                    if __name__ == '__main__':
-                         app.run(debug=True)
+                    #if __name__ == '__main__':
+                     #    app.run(debug=True)
                          #server  =Server(app.wsgi_app)
                          #server.watch("templates/*.*")
                          #server.serve(port=5000)
@@ -247,6 +250,4 @@ while True:
 
                 else:
                     print("This not opendroneid data")
-
-
 
