@@ -87,8 +87,14 @@ def decode_service_data(service_data):
 	vert_speed = service_data[4]
     #latitude = struct.unpack('!f', struct.pack('!I', service_data[5:9]))[0]
     #longitude = struct.unpack('!f', struct.pack('!I', service_data[9:13]))[0]
-	latitude =  struct.unpack('!I',service_data[5:9])[0]
+    latitude =  struct.unpack('!I',service_data[5:9])[0]
     longitude = struct.unpack('!I',service_data[9:13])[0]
+     # Additional fields to decode
+    height = struct.unpack('!H', service_data[19:21])[0]
+    geodetic_altitude = struct.unpack('!H', service_data[21:23])[0]
+    pressure_altitude = struct.unpack('!H', service_data[23:25])[0]
+    horizontal_speed = struct.unpack('!B', service_data[25:26])[0]
+    vertical_speed = struct.unpack('!b', service_data[26:27])[0]
     #latitude =  int.from_bytes(packet_bytes[5:9], byteorder='big', signed=True) / 10**7
     #longitude = int.from_bytes(packet_bytes[9:13], byteorder='big', signed=True) / 10**7  
 	#latitude = int.from_bytes(service_data[5:9], byteorder='big', signed=True)
@@ -132,6 +138,13 @@ def decode_service_data(service_data):
 	print("Vert Speed:", vert_speed)
 	print("UA Latitude:", latitude)
 	print("UA Longitude:", longitude)
+     
+    # ...Print the decoded fields (existing print statements remain unchanged)
+    print(f"Height: {height} meters")
+    print(f"Geodetic Altitude: {geodetic_altitude} meters")
+    print(f"Pressure Altitude: {pressure_altitude} meters")
+    print(f"Horizontal Speed: {horizontal_speed} m/s")
+    print(f"Vertical Speed: {vertical_speed} m/s")
 	print("UA Pressure Altitude:", ua_pressure_altitude)
 	print("UA Geodetic Altitude:", ua_geodetic_altitude)
 	print("UA Height AGL:", ua_height_agl)
@@ -168,6 +181,13 @@ def parse_packet(packet):
    # longitude = int.from_bytes(packet_bytes[9:13], byteorder='big')
     latitude = int.from_bytes(packet_bytes[5:9], byteorder='big', signed=True) / 10**7
     longitude = int.from_bytes(packet_bytes[9:13], byteorder='big', signed=True) / 10**7 
+    
+    # Additional fields to parse
+    height = int.from_bytes(packet_bytes[19:21], byteorder='big')
+    geodetic_altitude = int.from_bytes(packet_bytes[21:23], byteorder='big')
+    pressure_altitude = int.from_bytes(packet_bytes[23:25], byteorder='big')
+    horizontal_speed = int.from_bytes(packet_bytes[25:26], byteorder='big')
+    vertical_speed = int.from_bytes(packet_bytes[26:27], byteorder='big', signed=True)
 
     pressure_altitude = int.from_bytes(packet_bytes[13:15], byteorder='big')
     geodetic_altitude = int.from_bytes(packet_bytes[15:17], byteorder='big')
@@ -192,6 +212,13 @@ def parse_packet(packet):
     print(f"Vert Speed: {vert_speed}")
     print(f"UA Latitude: {latitude}")
     print(f"UA Longitude: {longitude}")
+    # Print the parsed data
+    # ... (existing print statements remain unchanged)
+    print(f"Height: {height}")
+    print(f"Geodetic Altitude: {geodetic_altitude}")
+    print(f"Pressure Altitude: {pressure_altitude}")
+    print(f"Horizontal Speed: {horizontal_speed}")
+    print(f"Vertical Speed: {vertical_speed}")
     print(f"UA Pressure Altitude: {pressure_altitude}")
     print(f"UA Geodetic Altitude: {geodetic_altitude}")
     print(f"UA Height AGL: {height_agl}")
