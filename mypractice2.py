@@ -3,6 +3,7 @@ import binascii
 import struct
 import math 
 import pyshark
+import mysql.connector
 # Define the Open Drone ID service UUID
 ODID_SERVICE_UUID = "00020001-0000-1000-8000-00805F9B34FB"
 
@@ -70,6 +71,43 @@ def decode_longitude(bits):
 		return f"{longitude_degrees:.6f}, {longitude_minutes:.6f}"  
 
 
+# Function to insert data into the MySQL database
+def insert_data_into_db(mac_address, latitude, longitude, altitude, height):
+    try:
+        connection = mysql.connector.connect(
+            host="192.168.54.206",
+            user="root",
+            password="1234",
+            database="dronescanner"
+        )
+
+        cursor = connection.cursor()
+
+        # Define the SQL query to insert data
+        sql = "INSERT INTO informationdrone (MacAddress, Latitude, Longitude, Altitude, Height, dateandtime) VALUES (%s, %s, %s, %s, %s, NOW())"
+
+        # Data to be inserted
+        values = (mac_address, latitude, longitude, altitude, height)
+
+        # Execute the query
+        cursor.execute(sql, values)
+
+        # Commit the changes to the database
+        connection.commit()
+
+        print("Data inserted successfully into the database!")
+
+    except mysql.connector.Error as error:
+        print(f"Error inserting data into MySQL table: {error}")
+
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL connection is closed")
+
+
+
 def decode_service_data(service_data):
     # Example decoding logic
     # Modify this based on the actual structure and format of the service data
@@ -121,6 +159,15 @@ def decode_service_data(service_data):
 	#longitude_bits = service_data[9:13]
 	#latitude = decode_latitude(latitude_bits)
 	#longitude = decode_longitude(longitude_bi
+     # Extract the relevant data
+    mac_address = dev.addr  # Assuming dev.addr holds the MacAddress
+    latitude_degrees = latitude_degrees
+    longitude_degrees = longitude_degrees
+    altitude = geodetic_altitude  # Assuming this is the altitude
+    height = height  # Assuming this is the height
+
+    # Insert the data into the MySQL database
+    insert_data_into_db(mac_address, latitude_degrees, longitude_degrees, altitude, height)
 
 
 
